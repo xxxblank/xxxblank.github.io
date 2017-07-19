@@ -3,17 +3,23 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Rirsa&#39;s Home</title>
+  <title>EventBus的使用和解析一 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="be strong,be friends">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Rirsa&#39;s Home">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="[TOC] ##1. 基本定义  EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。  EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="EventBus的使用和解析一">
+<meta property="og:url" content="http://yoursite.com/2017/07/19/eventBus/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="be strong,be friends">
+<meta property="og:description" content="[TOC] ##1. 基本定义  EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。  EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解">
+<meta property="og:image" content="http://yoursite.com/2017/07/19/eventBus/1500455753439.png">
+<meta property="og:image" content="http://yoursite.com/2017/07/19/eventBus/1500456056781.png">
+<meta property="og:image" content="http://yoursite.com/2017/07/19/eventBus/1500452356844.png">
+<meta property="og:updated_time" content="2017-07-19T10:53:18.204Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Rirsa&#39;s Home">
-<meta name="twitter:description" content="be strong,be friends">
+<meta name="twitter:title" content="EventBus的使用和解析一">
+<meta name="twitter:description" content="[TOC] ##1. 基本定义  EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。  EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解">
+<meta name="twitter:image" content="http://yoursite.com/2017/07/19/eventBus/1500455753439.png">
   
     <link rel="alternate" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -66,9 +72,7 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-eventBus" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-eventBus" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2017/07/19/eventBus/" class="article-date">
   <time datetime="2017-07-19T10:40:41.000Z" itemprop="datePublished">2017-07-19</time>
@@ -81,8 +85,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/07/19/eventBus/">EventBus的使用和解析一</a>
+    <h1 class="article-title" itemprop="name">
+      EventBus的使用和解析一
     </h1>
   
 
@@ -176,47 +180,19 @@
     </footer>
   </div>
   
-</article>
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-My-New-Post" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/07/17/My-New-Post/" class="article-date">
-  <time datetime="2017-07-17T07:33:56.000Z" itemprop="datePublished">2017-07-17</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/07/17/My-New-Post/">My New Post</a>
-    </h1>
+    <a href="/2017/07/17/My-New-Post/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Ancien</strong>
+      <div class="article-nav-title">My New Post</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="hhh"><a href="#hhh" class="headerlink" title="hhh"></a>hhh</h2><p><strong>����</strong></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/07/17/My-New-Post/" data-id="cj5aw3ulf0000qwtu34yyrrhu" class="article-share-link">Partager</a>
-      
-      
-    </footer>
-  </div>
   
 </article>
-
-
-  
 
 </section>
         
