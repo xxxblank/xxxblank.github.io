@@ -5,20 +5,20 @@
   
   <title>EventBus的使用和解析一 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="[TOC] ##1. 基本定义  EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。  EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解">
+  <meta name="description" content="[TOC] 1. 基本定义 EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。  EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解，都需">
 <meta name="keywords" content="Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="EventBus的使用和解析一">
 <meta property="og:url" content="http://yoursite.com/2017/07/19/eventBus/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="[TOC] ##1. 基本定义  EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。  EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解">
+<meta property="og:description" content="[TOC] 1. 基本定义 EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。  EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解，都需">
 <meta property="og:image" content="http://yoursite.com/2017/07/19/eventBus/1500455753439.png">
 <meta property="og:image" content="http://yoursite.com/2017/07/19/eventBus/1500456056781.png">
 <meta property="og:image" content="http://yoursite.com/2017/07/19/eventBus/1500452356844.png">
-<meta property="og:updated_time" content="2017-07-19T10:53:18.204Z">
+<meta property="og:updated_time" content="2017-07-19T10:56:30.013Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="EventBus的使用和解析一">
-<meta name="twitter:description" content="[TOC] ##1. 基本定义  EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。  EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解">
+<meta name="twitter:description" content="[TOC] 1. 基本定义 EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。  EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解，都需">
 <meta name="twitter:image" content="http://yoursite.com/2017/07/19/eventBus/1500455753439.png">
   
     <link rel="alternate" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
@@ -61,9 +61,9 @@
       </nav>
       <nav id="sub-nav">
         
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="Flux RSS"></a>
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Rechercher"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
@@ -95,12 +95,12 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>[TOC]</p>
-<p>##1. 基本定义</p>
-<blockquote>
+<h2 id="1-基本定义"><a href="#1-基本定义" class="headerlink" title="1. 基本定义"></a>1. 基本定义</h2><blockquote>
 <p>EventBus用于<strong>不同线程间、组件间</strong>进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。</p>
 </blockquote>
 <p>EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解，都需要先注册才能接收事件，都要重写用于接收并处理事件的方法，退出当前界面时都要取消注册。</p>
 <p>上面的话可能不是非常好理解，所谓<strong>用于不同线程间、组件间进行通信</strong>，换种说法就是<strong>代替了以往Intent、Handler、BroadcastReceiver</strong>实现在activity之间、fragment之间、activity与fragment之间、activity与service之间、主线程与子线程之间等等类似场景中传递数据进行通信的需求。</p>
+<a id="more"></a>
 <p>还是不能理解的话，可以举两个落到实处的例子：</p>
 <ul>
 <li>某处需要进行网络请求的地方，由于网络请求是耗时操作，所以开启一个子线程进行网络请求，请求到数据后返回主线程更新UI。</li>
@@ -108,32 +108,27 @@
 </ul>
 <p>第一个例子需要Handler进行线程间通信？第二个例子需要广播或者startActivityForResult？</p>
 <p>或者只需要一个EventBus。</p>
-<p>##2. 基本使用</p>
-<blockquote>
+<h2 id="2-基本使用"><a href="#2-基本使用" class="headerlink" title="2. 基本使用"></a>2. 基本使用</h2><blockquote>
 <p>下一篇文章会通过源码对注册的原理进行解释，这里先对整体的简单使用做一下总结。基础的使用只需要下面五步：</p>
 </blockquote>
-<p>###2.1 添加依赖</p>
-<p><a href="https://github.com/greenrobot/EventBus" target="_blank" rel="external">EventBus的GitHub地址</a></p>
+<h3 id="2-1-添加依赖"><a href="#2-1-添加依赖" class="headerlink" title="2.1 添加依赖"></a>2.1 添加依赖</h3><p><a href="https://github.com/greenrobot/EventBus" target="_blank" rel="external">EventBus的GitHub地址</a></p>
 <p>目前的最新依赖是</p>
 <blockquote>
 <p>compile ‘org.greenrobot:eventbus:3.0.0’</p>
 </blockquote>
-<p>###2.2 注册与取消注册</p>
-<p>EventBus的注册与取消注册操作基本在生命周期方法中调用，例如我们可以在onCreate方法中注册，在onDestory方法中取消注册。</p>
+<h3 id="2-2-注册与取消注册"><a href="#2-2-注册与取消注册" class="headerlink" title="2.2 注册与取消注册"></a>2.2 注册与取消注册</h3><p>EventBus的注册与取消注册操作基本在生命周期方法中调用，例如我们可以在onCreate方法中注册，在onDestory方法中取消注册。</p>
 <p>注册使用如下代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">EventBus.getDefault().register(Object object);</div></pre></td></tr></table></figure>
 <p>通过源码我们知道，getDefault（）方法就是EventBus类的一个静态的获取单例的方法，register方法会在后面通过源码解释。</p>
 <p>注册后订阅者即可接收到events，而一旦不再需要接收事件（比如订阅事件的activity被finish了），则必须要调用unregister方法取消订阅。</p>
 <p>取消注册同样要先获取EventBus的单例：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">EventBus.getDefault().unregister(Object Object);</div></pre></td></tr></table></figure>
-<p>###2.3 编写事件的类</p>
-<p>简单说这就是一个实体类，用于将需要传递的数据封装到一起，这个类是发送事件时作为参数的类，也是接收事件的方法中作为参数的类，即EventBus<strong>通过参数类型对应事件的发送和接收</strong>。</p>
+<h3 id="2-3-编写事件的类"><a href="#2-3-编写事件的类" class="headerlink" title="2.3 编写事件的类"></a>2.3 编写事件的类</h3><p>简单说这就是一个实体类，用于将需要传递的数据封装到一起，这个类是发送事件时作为参数的类，也是接收事件的方法中作为参数的类，即EventBus<strong>通过参数类型对应事件的发送和接收</strong>。</p>
 <p>示例：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestEvent</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> msg;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TestEvent</span><span class="params">(<span class="keyword">int</span> msg)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.msg = msg;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getMsg</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> msg;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setMsg</span><span class="params">(<span class="keyword">int</span> msg)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.msg = msg;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>发送事件时将携带传送信息的该类对象放到post方法的参数中即可，对应的接收事件的方法参数应对应为（TestEvent event）；</p>
 <p>具体的接收事件和发送事件在下面两节详述，不过为了便于举例，下面的举例不再使用TestEvent作为事件类，而是使用Integer类作为事件类，道理是相同的，理解了就能相通。</p>
-<p>###2.4 编写用于接收事件的方法</p>
-<p>相比2.0,EventBus3.0最明显的改动就是接收事件方法的编写上，老版本的EventBus需要让接收事件的方法必须以onEvent开头，对第一次接触EventBus的人们来说十分难以理解，3.0版本修改为引用注解，即<strong>在方法前标注@Subscribe，标注这个方法为接收事件的方法</strong>。</p>
+<h3 id="2-4-编写用于接收事件的方法"><a href="#2-4-编写用于接收事件的方法" class="headerlink" title="2.4 编写用于接收事件的方法"></a>2.4 编写用于接收事件的方法</h3><p>相比2.0,EventBus3.0最明显的改动就是接收事件方法的编写上，老版本的EventBus需要让接收事件的方法必须以onEvent开头，对第一次接触EventBus的人们来说十分难以理解，3.0版本修改为引用注解，即<strong>在方法前标注@Subscribe，标注这个方法为接收事件的方法</strong>。</p>
 <p>Subscribe注解有三个属性，threadMode（enum类型）、 sticky（boolean类型）和priority（int类型），分别可以设置该方法所在线程、接收事件是否为黏性事件以及事件的优先级。这些都可以从Subscribe注解的源码中看到：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Documented</span></div><div class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</div><div class="line"><span class="meta">@Target</span>(&#123;ElementType.METHOD&#125;)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Subscribe &#123;</div><div class="line"></div><div class="line">    <span class="function">ThreadMode <span class="title">threadMode</span><span class="params">()</span> <span class="keyword">default</span> ThreadMode.POSTING</span></div><div class="line">    </div><div class="line">    <span class="keyword">boolean</span> <span class="title">sticky</span><span class="params">()</span> <span class="keyword">default</span> <span class="keyword">false</span>;</div><div class="line">    </div><div class="line">    <span class="function"><span class="keyword">int</span> <span class="title">priority</span><span class="params">()</span> <span class="keyword">default</span> 0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>threadCode是一个枚举量，可以选择POSTING、MAIN、BACKGROUND、ASYNC四个值，四个值分别可以起到的作用如下：</p>
@@ -161,8 +156,7 @@
 <p><img src="./1500452356844.png" alt="Alt text"></p>
 <p>可以看到，在新线程中发送的事件，接收事件的方法同样运行在那条新线程中；而在主线程发送的方法，接收事件的方法就会运行到一条命名不同于普通新线程的后台线程去。</p>
 <p>MAIN和ASYNC相对比较好理解，这里不再用代码详述。</p>
-<p>###2.5 发送事件</p>
-<p>实际上在上面的举例中已经使用到了事件的发送，即如下代码：</p>
+<h3 id="2-5-发送事件"><a href="#2-5-发送事件" class="headerlink" title="2.5 发送事件"></a>2.5 发送事件</h3><p>实际上在上面的举例中已经使用到了事件的发送，即如下代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">EventBus.getDefault().post(Object event);</div></pre></td></tr></table></figure>
 <p>需要注意的有两个，一个是发送事件前必须确保要接受消息的界面中EventBus已经注册，二是参数必须是Object，因此参数中使用int等基本数据类型本身是不正确的，但是由于Java自带的自动装箱(Autoboxing)，因此填到参数中的基本数据类型会自动转换为对应的类，所以上面的例子中我可以直接使用post（1234）来发送事件。</p>
 <p>但是另一方面，接收事件的方法处不会自动拆箱，所以如果接收方法的参数使用int是接收不到post（1234）发送的事件的。</p>
@@ -172,7 +166,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/07/19/eventBus/" data-id="cj5aw3ulm0001qwtu2djhhh8q" class="article-share-link">Partager</a>
+      <a data-url="http://yoursite.com/2017/07/19/eventBus/" data-id="cj5aw7ud800011ctuf0p1eu1j" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
@@ -185,7 +179,7 @@
   
   
     <a href="/2017/07/17/My-New-Post/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Ancien</strong>
+      <strong class="article-nav-caption">Older</strong>
       <div class="article-nav-title">My New Post</div>
     </a>
   
@@ -203,7 +197,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Mot-clés</h3>
+    <h3 class="widget-title">Tags</h3>
     <div class="widget">
       <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li></ul>
     </div>
@@ -213,7 +207,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Nuage de mot-clés</h3>
+    <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
       <a href="/tags/Android/" style="font-size: 10px;">Android</a>
     </div>
@@ -232,7 +226,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Articles récents</h3>
+    <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
         
@@ -257,7 +251,7 @@
   <div class="outer">
     <div id="footer-info" class="inner">
       &copy; 2017 Rirsa<br>
-      Propulsé by <a href="http://hexo.io/" target="_blank">Hexo</a>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
 </footer>
