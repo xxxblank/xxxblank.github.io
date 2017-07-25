@@ -5,17 +5,17 @@
   
   <title>EventBus使用与分析三（源码分析之注册） | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前面学习了EventBus3.0的基本用法和发送黏性事件等，然而目前为止我们都是只知其然不知其所以然，出于刨根问底的好习惯，我们来详解一下EventBus的源码。 看源码就像拆线球，要先找到一个线头，然后顺着将整条线拉出来。这一次我们就按着EventBus的基本使用来看源码，EventBus.getDefault().register(Object object)就是我们的线头。 先看 getDe">
+  <meta name="description" content="前面学习了EventBus3.0的基本用法和发送黏性事件等，然而目前为止我们都是只知其然不知其所以然，出于刨根问底的好习惯，我们来详解一下EventBus的源码。 看源码就像拆线球，要先找到一个线头，然后顺着将整条线拉出来。这一次我们就按着EventBus的基本使用来看源码，">
 <meta name="keywords" content="Android,EventBus,源码">
 <meta property="og:type" content="article">
 <meta property="og:title" content="EventBus使用与分析三（源码分析之注册）">
 <meta property="og:url" content="http://yoursite.com/2017/07/25/EventBus-third/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="前面学习了EventBus3.0的基本用法和发送黏性事件等，然而目前为止我们都是只知其然不知其所以然，出于刨根问底的好习惯，我们来详解一下EventBus的源码。 看源码就像拆线球，要先找到一个线头，然后顺着将整条线拉出来。这一次我们就按着EventBus的基本使用来看源码，EventBus.getDefault().register(Object object)就是我们的线头。 先看 getDe">
-<meta property="og:updated_time" content="2017-07-25T10:26:35.175Z">
+<meta property="og:description" content="前面学习了EventBus3.0的基本用法和发送黏性事件等，然而目前为止我们都是只知其然不知其所以然，出于刨根问底的好习惯，我们来详解一下EventBus的源码。 看源码就像拆线球，要先找到一个线头，然后顺着将整条线拉出来。这一次我们就按着EventBus的基本使用来看源码，">
+<meta property="og:updated_time" content="2017-07-25T10:29:37.581Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="EventBus使用与分析三（源码分析之注册）">
-<meta name="twitter:description" content="前面学习了EventBus3.0的基本用法和发送黏性事件等，然而目前为止我们都是只知其然不知其所以然，出于刨根问底的好习惯，我们来详解一下EventBus的源码。 看源码就像拆线球，要先找到一个线头，然后顺着将整条线拉出来。这一次我们就按着EventBus的基本使用来看源码，EventBus.getDefault().register(Object object)就是我们的线头。 先看 getDe">
+<meta name="twitter:description" content="前面学习了EventBus3.0的基本用法和发送黏性事件等，然而目前为止我们都是只知其然不知其所以然，出于刨根问底的好习惯，我们来详解一下EventBus的源码。 看源码就像拆线球，要先找到一个线头，然后顺着将整条线拉出来。这一次我们就按着EventBus的基本使用来看源码，">
   
     <link rel="alternate" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -59,7 +59,7 @@
         
           <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Zoeken"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
@@ -95,7 +95,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>前面学习了EventBus3.0的基本用法和发送黏性事件等，然而目前为止我们都是只知其然不知其所以然，出于刨根问底的好习惯，我们来详解一下EventBus的源码。</p>
-<p>看源码就像拆线球，要先找到一个线头，然后顺着将整条线拉出来。这一次我们就按着EventBus的基本使用来看源码，EventBus.getDefault().register(Object object)就是我们的线头。</p>
+<p>看源码就像拆线球，要先找到一个线头，然后顺着将整条线拉出来。这一次我们就按着EventBus的基本使用来看源码，<a id="more"></a>EventBus.getDefault().register(Object object)就是我们的线头。</p>
 <p>先看 getDefault（）方法：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> EventBus <span class="title">getDefault</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (defaultInstance == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">synchronized</span> (EventBus.class) &#123;</div><div class="line">                <span class="keyword">if</span> (defaultInstance == <span class="keyword">null</span>) &#123;</div><div class="line">                    defaultInstance = <span class="keyword">new</span> EventBus();</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> defaultInstance;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
 <p>显而易见，这是一个单例模式，使用的是双层锁检测的线程安全的懒汉加载模式的单例（十分长的定语了，后面准备写一篇单例的博文），在第二层是否为空的检测后，对默认单例对象进行了实例化。</p>
@@ -193,7 +193,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/07/25/EventBus-third/" data-id="cj5jfsos000009stuh3p7rghc" class="article-share-link">Delen</a>
+      <a data-url="http://yoursite.com/2017/07/25/EventBus-third/" data-id="cj5jfwc2l00015gtuj25n2c19" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/EventBus/">EventBus</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/源码/">源码</a></li></ul>
@@ -206,7 +206,7 @@
   
   
     <a href="/2017/07/20/EventBus2/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Ouder</strong>
+      <strong class="article-nav-caption">Older</strong>
       <div class="article-nav-title">EventBus使用与解析二（黏性事件）</div>
     </a>
   
@@ -221,7 +221,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Categorieën</h3>
+    <h3 class="widget-title">Categories</h3>
     <div class="widget">
       <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术/">技术</a></li></ul>
     </div>
@@ -231,7 +231,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Labels</h3>
+    <h3 class="widget-title">Tags</h3>
     <div class="widget">
       <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/EventBus/">EventBus</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码/">源码</a></li></ul>
     </div>
@@ -250,7 +250,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Archieven</h3>
+    <h3 class="widget-title">Archives</h3>
     <div class="widget">
       <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li></ul>
     </div>
@@ -260,7 +260,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Recente berichten</h3>
+    <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
         
