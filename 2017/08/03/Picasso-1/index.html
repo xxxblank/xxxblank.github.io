@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Picasso解析一（基本使用） | Rirsa&#39;s Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="不知道有没有人疑惑过为什么要用图片加载框架，事实上我在一开始曾经一度疑惑为什么要使用图片加载框架来加载图片，明明自己就可以使用网络请求从任何地方请求一张图片下来啊。使用不方便？那我可以封装进一个工具类里啊。抱着这种心理">
+<meta name="keywords" content="Android,Picasso,图片加载框架">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Picasso解析一（基本使用）">
+<meta property="og:url" content="http://yoursite.com/2017/08/03/Picasso-1/index.html">
+<meta property="og:site_name" content="Rirsa&#39;s Home">
+<meta property="og:description" content="不知道有没有人疑惑过为什么要用图片加载框架，事实上我在一开始曾经一度疑惑为什么要使用图片加载框架来加载图片，明明自己就可以使用网络请求从任何地方请求一张图片下来啊。使用不方便？那我可以封装进一个工具类里啊。抱着这种心理">
+<meta property="og:image" content="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3z6ofbj30r00zb1kx.jpg">
+<meta property="og:image" content="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3hbpuej30tz10cu0x.jpg">
+<meta property="og:updated_time" content="2017-08-03T07:37:43.677Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Picasso解析一（基本使用）">
+<meta name="twitter:description" content="不知道有没有人疑惑过为什么要用图片加载框架，事实上我在一开始曾经一度疑惑为什么要使用图片加载框架来加载图片，明明自己就可以使用网络请求从任何地方请求一张图片下来啊。使用不方便？那我可以封装进一个工具类里啊。抱着这种心理">
+<meta name="twitter:image" content="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3z6ofbj30r00zb1kx.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Rirsa&#39;s Home</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">Reality is the end of dream.</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Picasso-1" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/08/03/Picasso-1/" class="article-date">
+  <time datetime="2017-08-03T02:52:18.000Z" itemprop="datePublished">2017-08-03</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/技术/">技术</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Picasso解析一（基本使用）
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>不知道有没有人疑惑过为什么要用图片加载框架，事实上我在一开始曾经一度疑惑为什么要使用图片加载框架来加载图片，明明自己就可以使用网络请求从任何地方请求一张图片下来啊。使用不方便？那我可以封装进一个工具类里啊。抱着这种心理<a id="more"></a>我一度是拒绝使用图片加载框架的，直到后面了解到的知识更加深入，才知道图片加载不仅仅是请求到图片并显示出来那么简单。</p>
+<p>一个简单的例子，在一个listView中每个item都有自己的图片要请求显示，且滑动出屏幕的item会被回收，在这种需求下，图片加载要考虑的就不止是单纯的网络请求和ui显示，还要有缓存、线程调度、资源回收、内存占用等问题，处理不好便会十分卡顿，稍不注意就是oom。</p>
+<p>而图片加载框架，就是将多级缓存、异步线程调度、图片压缩等都做好了封装，使用者不需再关注内存占用、oom、网络请求等问题，可以将更多的精力都放在业务逻辑上，图片加载只用一行代码就给你完美的处理好，本次就针对图片加载框架Picasso进行一下解析。</p>
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>像如今盛行的大部分框架一样，源码暂且不谈，使用绝对要简便至上，一般的需求只需要如下一行代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Picasso.with(GlideTest.<span class="keyword">this</span>).load(R.mipmap.ic_launcher).into(img);</div></pre></td></tr></table></figure>
+<p>with()方法中传入上下文context，load方法里可以传入本地文件、指向本地资源文件的R文件地址、url字符串、uri对象四种参数，into参数传入要加载图片的控件对象。</p>
+<p>一行代码下来，运行起APP，就可以看到图片加载到了控件上，当然Picasso所做的事不止于此，它背后已经默默为你开了线程池、初始化好了缓存、做了图片压缩等等工作，这些后面详细分析。</p>
+<p>继续回到使用上，前面说的那一行代码足以解决大部分需求，还有一部分可能会使用到的需求Picasso也考虑的很全面，可以看到load方法返回了一个RequestCreator对象，而在RequestCreator类中，Picasso开发者已经为我们封装好了所有可能用到的方法：</p>
+<ul>
+<li><p>placeholder方法<br>这个方法可以用来在加载图片而图片还没有加载出来的时候显示一张占位图，使用户知道当前图片还在加载，不至于出现一片空白这种糟糕的用户体验。它有两个互相重载的方法，一个参数可以传入int类型的资源id，另一个参数是Drawable类型的资源对象。<br>使用方法也很简单，因为是RequestCreator类中的方法，所以只需要在之前的一行代码中在load之后、into之前调用即可。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Picasso.with(GlideTest.<span class="keyword">this</span>).load(R.mipmap.ic_launcher).placeholder(R.mipmap.ic_launcher_round).into(img);</div></pre></td></tr></table></figure>
+</li>
+<li><p>error方法<br>设置请求图片出错的时候显示的图片，使用户知道图片加载错误了，也是有两个重载方法，分别可以传入资源id和drawable对象，用法与placeholder差不多，不再赘述。</p>
+</li>
+<li><p>tag方法<br>用于为当前请求分配标签，用于统一管理相关的请求，参数是一个object对象，可以传入任意Object的子类。与这个方法有关的有Picasso类中的cancelTag(Object)、pauseTag(Object)、resumeTag(Object)，分别用于对设置了对应tag的请求进行取消、暂停、重新启动操作。<br>适用这个方法的典型情景是，在列表视图中，如果快速进行滑动，则完全可以在滑动的时候暂停所有网络请求，在停止滑动的时候再次开始请求，实现这种需求的方法就是利用同一个tag在适当的地方调用resumeTag和pauseTag。<br>示例如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">  <span class="comment">//adapter中</span></div><div class="line">  Picasso.with(parent.getContext())</div><div class="line">                    .load(paths.get(position)).fit().tag(<span class="string">"item"</span>).into(holder.img);</div><div class="line"><span class="comment">//activity中</span></div><div class="line">list.setOnScrollListener(<span class="keyword">new</span> AbsListView.OnScrollListener() &#123;</div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onScrollStateChanged</span><span class="params">(AbsListView view, <span class="keyword">int</span> scrollState)</span> </span>&#123;</div><div class="line">                <span class="keyword">switch</span> (scrollState)&#123;</div><div class="line">                    <span class="keyword">case</span> SCROLL_STATE_FLING:</div><div class="line">                        Picasso.with(GlideTest.<span class="keyword">this</span>).pauseTag(<span class="string">"item"</span>);</div><div class="line">                        <span class="keyword">break</span>;</div><div class="line">                    <span class="keyword">case</span> SCROLL_STATE_IDLE:</div><div class="line">                        Picasso.with(GlideTest.<span class="keyword">this</span>).resumeTag(<span class="string">"item"</span>);</div><div class="line">                        <span class="keyword">break</span>;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onScroll</span><span class="params">(AbsListView view, <span class="keyword">int</span> firstVisibleItem, <span class="keyword">int</span> visibleItemCount, <span class="keyword">int</span> totalItemCount)</span> </span>&#123;</div><div class="line"></div><div class="line">            &#125;</div><div class="line">        &#125;);</div></pre></td></tr></table></figure>
+</li>
+<li><p>fit方法<br>在源码中这个方法只是将deferred的值改为true，而这个值为true的意义是使图片根据ImageView的大小充满整个view，不考虑比例，可能导致图片被拉伸或缩小。要注意的是，<strong>fit方法只能用在imageView上，且应用fit的imageView不能为wrapcontent，</strong>很好理解，毕竟fit要测量好宽高才能加载图片。<br>上面adapter中的使用就用到了fit方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Picasso.with(parent.getContext())</div><div class="line">                  .load(paths.get(position)).fit().tag(<span class="string">"item"</span>).into(holder.img);</div></pre></td></tr></table></figure>
+<p>直观的看一下不使用fit和使用fit的区别</p>
+<p><img src="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3z6ofbj30r00zb1kx.jpg" alt="不使用fit">          <img src="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3hbpuej30tz10cu0x.jpg" alt="使用fit"></p>
+</li>
+<li><p>resizeDimen方法<br>作用就是根据传入的两个参数设置图片的宽高，这里两个参数是两个资源id，与之有关联的是resize方法，可以直接传入两个int值进行设置，resizeDimen方法内部最后也是调用了resize方法。使用方法还是跟在load方法之后调用即可，但是需要注意一点，<strong>该方法和resize方法都不能与fit方法一起使用，否则会抛出错误导致程序崩溃</strong>。<br>这个不难理解，fit方法使图片自己适应到整个ImageView的宽高，resize和resizeDimen又是告诉Picasso你想要显示一个具体宽高的图片，这种前后矛盾的命令，不要说程序会崩溃了，换你你也崩溃。</p>
+</li>
+<li><p>centerInside&amp;centerCrop方法<br>熟悉ImageView方法的同学应该会觉得眼熟，这两个方法在ImageView中也有，在这里的作用和在ImageView中的作用差别不大，centerCrop方法以将控件填满为最终目的，会调整图片的尺寸，使宽高都扩展到足以触碰到ImageView的边界，然后将边界外的部分裁剪掉，所以图片的显示是不完全的；centerInside则是以把图片完整的放到控件内为目的，如果宽高比控件大，则缩放至刚好可以放在控件内的程度，比控件小就直接显示。<br><strong>这两个方法是必须跟在拿到具体宽高的方法后的，即必须跟在resize的两个方法或fit方法后，不然会抛异常。</strong></p>
+</li>
+<li><p>onlyScaleDown方法<br>设置在只有原始图片比目标size大的时候才调用resize方法，即<strong>此方法只能在resize方法调用后调用。</strong></p>
+</li>
+<li><p>rotate方法<br>设置图片旋转，有两个重载方法，一个传入一个旋转角度的float值degree，另一个传入degree和一个旋转中心点的x和y坐标。</p>
+</li>
+<li><p>priority方法<br>传入priority枚举类的对象，设定当前请求的优先级，优先级高的先请求。</p>
+</li>
+<li><p>transform方法<br>传入一个自定义Transformation对象，可以在load之后、into之前对图片做很多转换处理，能想到的需求比如设置圆角图片、高斯模糊等都可以通过传入对应的Transformation实现。</p>
+</li>
+<li><p>skipMemoryCache方法<br>跳过内存缓存，内部调用了memoryPolicy方法，作用是不再让Picasso将请求到的图片缓存到内存，而是直接缓存到磁盘上。</p>
+</li>
+<li><p>networkPolicy方法<br>可以理解为设置网络策略的方法，参数传入枚举NetworkPolicy的值，枚举类型有三个:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/** Skips checking the disk cache and forces loading through the network. */</span></div><div class="line">NO_CACHE(<span class="number">1</span> &lt;&lt; <span class="number">0</span>),</div><div class="line"></div><div class="line"><span class="comment">/**</span></div><div class="line"> * Skips storing the result into the disk cache.</div><div class="line"> * &lt;p&gt;</div><div class="line"> * &lt;em&gt;Note&lt;/em&gt;: At this time this is only supported if you are using OkHttp.</div><div class="line"> */</div><div class="line">NO_STORE(<span class="number">1</span> &lt;&lt; <span class="number">1</span>),</div><div class="line"></div><div class="line"><span class="comment">/** Forces the request through the disk cache only, skipping network. */</span></div><div class="line">OFFLINE(<span class="number">1</span> &lt;&lt; <span class="number">2</span>);</div></pre></td></tr></table></figure>
+<p>NO_CACHE表示处理请求的时候跳过磁盘缓存，即不管磁盘中有没有这次请求的缓存，都会从网络上重新请求一个下来；<br>NO_STORE表示请求成功后，不将请求结果缓存到磁盘中，但这个<strong>只对okhttp有效</strong>；<br>OFFLINE表示离线状态，不管磁盘中有没有缓存，设置这个状态后，都不会再从网络请求数据，而是直接从缓存中获取结果，不管缓存中能否获取到结果。</p>
+</li>
+<li><p>fetch()方法<br>用来预加载一张图片，可以在获取到ImageView或者target之前就将图片缓存下来。它还有一个重载方法是有一个callback参数，可以用来回调，然而这个 callback的回调方法是没有参数的，大概只是想用来告诉你这个请求是请求成功了还是失败了吧。。。</p>
+</li>
+</ul>
+<p>以上的方法基本涵盖了Picasso的各种用法，下篇会从源码上对Picasso进行分析。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/08/03/Picasso-1/" data-id="cj5w4qjph0004sstuxnfgs83t" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Picasso/">Picasso</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/图片加载框架/">图片加载框架</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2017/07/25/EventBus-third/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">EventBus使用与分析三（源码分析之注册）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术/">技术</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/EventBus/">EventBus</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Picasso/">Picasso</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/图片加载框架/">图片加载框架</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码/">源码</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Android/" style="font-size: 20px;">Android</a> <a href="/tags/EventBus/" style="font-size: 15px;">EventBus</a> <a href="/tags/Picasso/" style="font-size: 10px;">Picasso</a> <a href="/tags/图片加载框架/" style="font-size: 10px;">图片加载框架</a> <a href="/tags/源码/" style="font-size: 10px;">源码</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/08/03/Picasso-1/">Picasso解析一（基本使用）</a>
+          </li>
+        
+          <li>
+            <a href="/2017/07/25/EventBus-third/">EventBus使用与分析三（源码分析之注册）</a>
+          </li>
+        
+          <li>
+            <a href="/2017/07/20/EventBus2/">EventBus使用与解析二（黏性事件）</a>
+          </li>
+        
+          <li>
+            <a href="/2017/07/19/eventBus/">EventBus的使用和解析一</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 Rirsa<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
