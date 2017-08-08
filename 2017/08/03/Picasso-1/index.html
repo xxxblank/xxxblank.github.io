@@ -5,19 +5,19 @@
   
   <title>Picasso解析一（基本使用） | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="不知道有没有人疑惑过为什么要用图片加载框架，事实上我在一开始曾经一度疑惑为什么要使用图片加载框架来加载图片，明明自己就可以使用网络请求从任何地方请求一张图片下来啊。使用不方便？那我可以封装进一个工具类里啊。抱着这种心理">
+  <meta name="description" content="使用图片加载框架的意义是什么呢？明明自己就可以使用网络请求从任何地方请求一张图片下来，为什么还要使用图片加载框架来加载图片？">
 <meta name="keywords" content="Android,Picasso,图片加载框架">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Picasso解析一（基本使用）">
 <meta property="og:url" content="http://yoursite.com/2017/08/03/Picasso-1/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="不知道有没有人疑惑过为什么要用图片加载框架，事实上我在一开始曾经一度疑惑为什么要使用图片加载框架来加载图片，明明自己就可以使用网络请求从任何地方请求一张图片下来啊。使用不方便？那我可以封装进一个工具类里啊。抱着这种心理">
+<meta property="og:description" content="使用图片加载框架的意义是什么呢？明明自己就可以使用网络请求从任何地方请求一张图片下来，为什么还要使用图片加载框架来加载图片？">
 <meta property="og:image" content="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3z6ofbj30r00zb1kx.jpg">
 <meta property="og:image" content="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3hbpuej30tz10cu0x.jpg">
-<meta property="og:updated_time" content="2017-08-03T07:37:43.677Z">
+<meta property="og:updated_time" content="2017-08-08T05:35:35.134Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Picasso解析一（基本使用）">
-<meta name="twitter:description" content="不知道有没有人疑惑过为什么要用图片加载框架，事实上我在一开始曾经一度疑惑为什么要使用图片加载框架来加载图片，明明自己就可以使用网络请求从任何地方请求一张图片下来啊。使用不方便？那我可以封装进一个工具类里啊。抱着这种心理">
+<meta name="twitter:description" content="使用图片加载框架的意义是什么呢？明明自己就可以使用网络请求从任何地方请求一张图片下来，为什么还要使用图片加载框架来加载图片？">
 <meta name="twitter:image" content="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3z6ofbj30r00zb1kx.jpg">
   
     <link rel="alternate" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
@@ -60,9 +60,9 @@
       </nav>
       <nav id="sub-nav">
         
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="Flux RSS"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Zoeken"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Rechercher"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
@@ -97,7 +97,8 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>不知道有没有人疑惑过为什么要用图片加载框架，事实上我在一开始曾经一度疑惑为什么要使用图片加载框架来加载图片，明明自己就可以使用网络请求从任何地方请求一张图片下来啊。使用不方便？那我可以封装进一个工具类里啊。抱着这种心理<a id="more"></a>我一度是拒绝使用图片加载框架的，直到后面了解到的知识更加深入，才知道图片加载不仅仅是请求到图片并显示出来那么简单。</p>
+        <p>使用图片加载框架的意义是什么呢？明明自己就可以使用网络请求从任何地方请求一张图片下来，为什么还要使用图片加载框架来加载图片？</p>
+<a id="more"></a>
 <p>一个简单的例子，在一个listView中每个item都有自己的图片要请求显示，且滑动出屏幕的item会被回收，在这种需求下，图片加载要考虑的就不止是单纯的网络请求和ui显示，还要有缓存、线程调度、资源回收、内存占用等问题，处理不好便会十分卡顿，稍不注意就是oom。</p>
 <p>而图片加载框架，就是将多级缓存、异步线程调度、图片压缩等都做好了封装，使用者不需再关注内存占用、oom、网络请求等问题，可以将更多的精力都放在业务逻辑上，图片加载只用一行代码就给你完美的处理好，本次就针对图片加载框架Picasso进行一下解析。</p>
 <h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>像如今盛行的大部分框架一样，源码暂且不谈，使用绝对要简便至上，一般的需求只需要如下一行代码：</p>
@@ -145,7 +146,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/08/03/Picasso-1/" data-id="cj620wlfi00043wtu0djthfqv" class="article-share-link">Delen</a>
+      <a data-url="http://yoursite.com/2017/08/03/Picasso-1/" data-id="cj63gi4ul0004hgtuy6gdvqj8" class="article-share-link">Partager</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Picasso/">Picasso</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/图片加载框架/">图片加载框架</a></li></ul>
@@ -156,18 +157,9 @@
     
 <nav id="article-nav">
   
-    <a href="/2017/08/07/life-1/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Nieuwer</strong>
-      <div class="article-nav-title">
-        
-          life_1
-        
-      </div>
-    </a>
-  
   
     <a href="/2017/07/25/EventBus-third/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Ouder</strong>
+      <strong class="article-nav-caption">Ancien</strong>
       <div class="article-nav-title">EventBus使用与分析三（源码分析之注册）</div>
     </a>
   
@@ -182,9 +174,9 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Categorieën</h3>
+    <h3 class="widget-title">Catégories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术/">技术</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/生活/">生活</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术/">技术</a></li></ul>
     </div>
   </div>
 
@@ -192,9 +184,9 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Labels</h3>
+    <h3 class="widget-title">Mot-clés</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/EventBus/">EventBus</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Picasso/">Picasso</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/休息/">休息</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/图片加载框架/">图片加载框架</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/感想/">感想</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码/">源码</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/EventBus/">EventBus</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Picasso/">Picasso</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/图片加载框架/">图片加载框架</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/源码/">源码</a></li></ul>
     </div>
   </div>
 
@@ -202,16 +194,16 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Tag Cloud</h3>
+    <h3 class="widget-title">Nuage de mot-clés</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Android/" style="font-size: 20px;">Android</a> <a href="/tags/EventBus/" style="font-size: 15px;">EventBus</a> <a href="/tags/Picasso/" style="font-size: 10px;">Picasso</a> <a href="/tags/休息/" style="font-size: 10px;">休息</a> <a href="/tags/图片加载框架/" style="font-size: 10px;">图片加载框架</a> <a href="/tags/感想/" style="font-size: 10px;">感想</a> <a href="/tags/源码/" style="font-size: 10px;">源码</a>
+      <a href="/tags/Android/" style="font-size: 20px;">Android</a> <a href="/tags/EventBus/" style="font-size: 15px;">EventBus</a> <a href="/tags/Picasso/" style="font-size: 10px;">Picasso</a> <a href="/tags/图片加载框架/" style="font-size: 10px;">图片加载框架</a> <a href="/tags/源码/" style="font-size: 10px;">源码</a>
     </div>
   </div>
 
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Archieven</h3>
+    <h3 class="widget-title">Archives</h3>
     <div class="widget">
       <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li></ul>
     </div>
@@ -221,13 +213,9 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Recente berichten</h3>
+    <h3 class="widget-title">Articles récents</h3>
     <div class="widget">
       <ul>
-        
-          <li>
-            <a href="/2017/08/07/life-1/">life_1</a>
-          </li>
         
           <li>
             <a href="/2017/08/03/Picasso-1/">Picasso解析一（基本使用）</a>
@@ -258,7 +246,7 @@
   <div class="outer">
     <div id="footer-info" class="inner">
       &copy; 2017 Rirsa<br>
-      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+      Propulsé by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
 </footer>
