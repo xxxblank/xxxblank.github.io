@@ -6,17 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives | Rirsa&#39;s Home</title>
+  <title>消息处理机制 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="be strong,be friends">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Rirsa&#39;s Home">
-<meta property="og:url" content="http://yoursite.com/archives/index.html">
+  <meta name="description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。 在我浅显的理解里，整个消息机制由Handler、Message、Looper三个主要部分组成，Handler负责发送和处理消息，MessageQuene是按次序存储消息的队列，Looper负责不断的从消息队列中取出消息给Handle">
+<meta name="keywords" content="Android,源码,Handler,Message,消息处理机制">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息处理机制">
+<meta property="og:url" content="http://yoursite.com/2017/08/11/message/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="be strong,be friends">
+<meta property="og:description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。 在我浅显的理解里，整个消息机制由Handler、Message、Looper三个主要部分组成，Handler负责发送和处理消息，MessageQuene是按次序存储消息的队列，Looper负责不断的从消息队列中取出消息给Handle">
+<meta property="og:updated_time" content="2017-08-11T09:28:49.549Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Rirsa&#39;s Home">
-<meta name="twitter:description" content="be strong,be friends">
+<meta name="twitter:title" content="消息处理机制">
+<meta name="twitter:description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。 在我浅显的理解里，整个消息机制由Handler、Message、Looper三个主要部分组成，Handler负责发送和处理消息，MessageQuene是按次序存储消息的队列，Looper负责不断的从消息队列中取出消息给Handle">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -162,36 +164,115 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-message" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/08/11/message/" class="archive-article-date">
-  	<time datetime="2017-08-11T09:13:11.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-11</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/08/11/message/">消息处理机制</a>
+    <h1 class="article-title" itemprop="name">
+      消息处理机制
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2017/08/11/message/" class="archive-article-date">
+  	<time datetime="2017-08-11T09:13:11.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-11</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。</p>
+<p>在我浅显的理解里，整个消息机制由Handler、Message、Looper三个主要部分组成，Handler负责发送和处理消息，MessageQuene是按次序存储消息的队列，Looper负责不断的从消息队列中取出消息给Handler的处理端。之前说看源码要找线头，既然消息是从Handler发出的，不妨就试试从Handler开始看。</p>
+<h2 id="Handler的构造函数（一）"><a href="#Handler的构造函数（一）" class="headerlink" title="Handler的构造函数（一）"></a>Handler的构造函数（一）</h2><p>点开Handler类的源码，可以很快找到Handler的几个构造函数，最后都会调用到下面两个构造函数处：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">Handler</span><span class="params">(Callback callback, <span class="keyword">boolean</span> async)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (FIND_POTENTIAL_LEAKS) &#123;</div><div class="line">            <span class="keyword">final</span> Class&lt;? extends Handler&gt; klass = getClass();</div><div class="line">            <span class="keyword">if</span> ((klass.isAnonymousClass() || klass.isMemberClass() || klass.isLocalClass()) &amp;&amp;</div><div class="line">                    (klass.getModifiers() &amp; Modifier.STATIC) == <span class="number">0</span>) &#123;</div><div class="line">                Log.w(TAG, <span class="string">"The following Handler class should be static or leaks might occur: "</span> +</div><div class="line">                    klass.getCanonicalName());</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        mLooper = Looper.myLooper();</div><div class="line">        <span class="keyword">if</span> (mLooper == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</div><div class="line">                <span class="string">"Can't create handler inside thread that has not called Looper.prepare()"</span>);</div><div class="line">        &#125;</div><div class="line">        mQueue = mLooper.mQueue;</div><div class="line">        mCallback = callback;</div><div class="line">        mAsynchronous = async;</div><div class="line">    &#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">Handler</span><span class="params">(Looper looper, Callback callback, <span class="keyword">boolean</span> async)</span> </span>&#123;</div><div class="line">        mLooper = looper;</div><div class="line">        mQueue = looper.mQueue;</div><div class="line">        mCallback = callback;</div><div class="line">        mAsynchronous = async;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>先看上面两个参数的构造函数，先看到一坨if判断的代码块，判断条件是FIND_POTENTIAL_LEAKS，看源码注释，这个静态常量是一个标志位，设置为true时可用来检测出继承这个Handler的非静态的内部类或扩展类，当然源码中直接设为了false，这一坨可以先跳过，接下来的一行才是重点：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mLooper = Looper.myLooper();</div></pre></td></tr></table></figure>
+<p>mLooper是Handler类成员，通过Looper类的myLooper方法实例化，这也就是<strong>Handler的构造方法做的第一件事</strong>，实例化一个Looper对象。</p>
+<p>点进myLooper方法看一下Looper类在这里做了什么：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="meta">@Nullable</span> <span class="function">Looper <span class="title">myLooper</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> sThreadLocal.get();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>sThreadLocal是ThreadLocal的对象，这里通过sThreadLocal调用了ThreadLocal类的get方法，所以我们继续点进sThreadLocal的get方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">()</span> </span>&#123;</div><div class="line">        Thread t = Thread.currentThread();</div><div class="line">        ThreadLocalMap map = getMap(t);</div><div class="line">        <span class="keyword">if</span> (map != <span class="keyword">null</span>) &#123;</div><div class="line">            ThreadLocalMap.Entry e = map.getEntry(<span class="keyword">this</span>);</div><div class="line">            <span class="keyword">if</span> (e != <span class="keyword">null</span>)</div><div class="line">                <span class="keyword">return</span> (T)e.value;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> setInitialValue();</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>sThreadLocal初始化时传入的泛型是Looper类，所以这里的T可以看作是Looper，这个方法中首先拿到了<strong>当前的线程</strong>，注意加粗的部分，所谓当前线程自然就是调用到此时这个get方法的线程，也就是调用到myLooper方法的线程，也就是初始化Handler对象时调用Handler构造函数的线程。</p>
+<p>然后通过getMap方法实例化一个ThreadLocalMap对象，走下去不难发现，map的值为null，再看看setInitialValue方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> T <span class="title">setInitialValue</span><span class="params">()</span> </span>&#123;</div><div class="line">        T value = initialValue();</div><div class="line">        Thread t = Thread.currentThread();</div><div class="line">        ThreadLocalMap map = getMap(t);</div><div class="line">        <span class="keyword">if</span> (map != <span class="keyword">null</span>)</div><div class="line">            map.set(<span class="keyword">this</span>, value);</div><div class="line">        <span class="keyword">else</span></div><div class="line">            createMap(t, value);</div><div class="line">        <span class="keyword">return</span> value;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>再点进initialValue方法，惊喜的发现返回值还是个null，createMap时也只是将null值放在了用于缓存的map中，最后将null值返回，回到Handler的构造方法中，mLooper = Looper.myLooper()，mLooper得到返回值null，然后抛出异常，程序gg。</p>
+<p>惊不惊喜，意不意外。</p>
+<p>让我们回头看看Looper类中对sThreadLocal声明时写在上面的注解：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// sThreadLocal.get() will return null unless you've called prepare().</span></div><div class="line"><span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;Looper&gt; sThreadLocal = <span class="keyword">new</span> ThreadLocal&lt;Looper&gt;();</div></pre></td></tr></table></figure>
+<p>如果不调用prepare方法，直接调用sThreadLocal的get方法将会返回null，我们从Handler开始走源码，并没有调用到Looper的prepare方法，所以自然会获取null继而无法继续下去。</p>
+<p>拆线失败，Handler不是我们要找的线头，上面说要先调用到Looper类的prepare方法才能在调用myLooper方法时不得到null，那就转移视线，这次试试Looper做线头。</p>
+<h2 id="Looper的准备工作"><a href="#Looper的准备工作" class="headerlink" title="Looper的准备工作"></a>Looper的准备工作</h2><p>Looper的构造方法时私有的，不难发现，调用Looper私有构造方法的地方就是前面一直提到的prepare方法，我们看一下prepare方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">prepare</span><span class="params">()</span> </span>&#123;</div><div class="line">        prepare(<span class="keyword">true</span>);</div><div class="line">    &#125;</div><div class="line">    </div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">prepare</span><span class="params">(<span class="keyword">boolean</span> quitAllowed)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (sThreadLocal.get() != <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Only one Looper may be created per thread"</span>);</div><div class="line">        &#125;</div><div class="line">        sThreadLocal.set(<span class="keyword">new</span> Looper(quitAllowed));</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>无参的prepare方法最后调用到私有的单参prepare方法，方法中对sThreadLocal的get方法做了一个判空，如果返回值不为null则抛出异常，否则才调用set方法通过Looper私有的构造方法新建一个Looper对象添加到sThreadLocal中。</p>
+<p>下面是Looper的私有构造函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="title">Looper</span><span class="params">(<span class="keyword">boolean</span> quitAllowed)</span> </span>&#123;</div><div class="line">        mQueue = <span class="keyword">new</span> MessageQueue(quitAllowed);</div><div class="line">        mThread = Thread.currentThread();</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>做了两件事，<strong>初始化一个消息队列，以及获取到当前的线程</strong>。</p>
+<p>所以很明显，prepare方法的主要作用就是<strong>初始化一个Looper对象并放到sThreadLocal中</strong>，而前面if的判断，则保证了prepare不能被调用两次，否则就会报错。而ThreadLocal的特性是由它创建的变量只能由当前线程访问，综上，<strong>prepare方法的作用就是初始化Looper对象，且保证每个线程只有一个Looper对象</strong>。</p>
+<p>此时再看Looper类的myLooper方法，自然是返回prepare方法中初始化完成并暂存在sThreadLocal中的Looper对象。不过Looper的工作还没完成，Looper的准备工作要做两步，一个是prepare，一个是loop。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">loop</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">final</span> Looper me = myLooper();</div><div class="line">        <span class="keyword">final</span> MessageQueue queue = me.mQueue;</div><div class="line">        <span class="keyword">for</span> (;;) &#123;</div><div class="line">            Message msg = queue.next(); <span class="comment">// might block</span></div><div class="line">            <span class="keyword">if</span> (msg == <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="comment">// No message indicates that the message queue is quitting.</span></div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                msg.target.dispatchMessage(msg);</div><div class="line">            &#125; <span class="keyword">finally</span> &#123;</div><div class="line">          </div><div class="line">            &#125;</div><div class="line">            </div><div class="line">            msg.recycleUnchecked();</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>事实上loop方法做了很多log和线程追踪，但是这里只将实现主要功能的代码放在上面。我们看到，方法中先通过myLooper方法获取到前面prepare方法中初始化好的Looper对象，然后拿到Looper的构造函数中初始化好的消息队列对象mQueue，然后进入到了一个无限循环。</p>
+<p>循环中不断从消息中取Message对象，如果取到消息为null，则通过return实现阻塞，如果有消息出现在队列中，则被取出，通过取出消息的target调用dispatchMessage方法，并将消息传入该方法。</p>
+<p>所谓target，其实就是Message类中的一个Handler对象，这里就是拿到队列中取出的消息的Handler属性对象，并调用它的dispatchMesssage方法对这个消息进行分发处理，该方法留到后面看Handler的源码详细分析。</p>
+<p>将事件分发处理之后，loop方法最后调用了从队列中取出的Message对象的recycleUnchecked方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">recycleUnchecked</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="comment">// Mark the message as in use while it remains in the recycled object pool.</span></div><div class="line">        <span class="comment">// Clear out all other details.</span></div><div class="line">        flags = FLAG_IN_USE;</div><div class="line">        what = <span class="number">0</span>;</div><div class="line">        arg1 = <span class="number">0</span>;</div><div class="line">        arg2 = <span class="number">0</span>;</div><div class="line">        obj = <span class="keyword">null</span>;</div><div class="line">        replyTo = <span class="keyword">null</span>;</div><div class="line">        sendingUid = -<span class="number">1</span>;</div><div class="line">        when = <span class="number">0</span>;</div><div class="line">        target = <span class="keyword">null</span>;</div><div class="line">        callback = <span class="keyword">null</span>;</div><div class="line">        data = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">        <span class="keyword">synchronized</span> (sPoolSync) &#123;</div><div class="line">            <span class="keyword">if</span> (sPoolSize &lt; MAX_POOL_SIZE) &#123;</div><div class="line">                next = sPool;</div><div class="line">                sPool = <span class="keyword">this</span>;</div><div class="line">                sPoolSize++;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>显然，这个方法做了一个资源回收的工作，需要注意的是最后加锁的代码段中有一系列pool变量，显然Message类内部有一个变量池的处理，这里不详说，后面Message类中详细解释。</p>
+<p>至此，Looper类完成了整个消息处理机制的准备工作，整个Looper类的工作其实也就是先给消息处理机制搭架子，总结起来就是做了下面几件事：</p>
+<ol>
+<li><strong>prepare方法负责初始化一个自己的对象，并确保每个线程只有一个对象；</strong></li>
+<li><strong>实例化时，构造方法中初始化了消息队列并 绑定了当前的线程；</strong></li>
+<li><strong>loop方法负责开启无限循环，消息队列为空时等待，一旦出现消息就取出并通过消息的target对象进行事件分发；</strong></li>
+<li><strong>如果取出消息，最后对取出的消息进行资源回收，然后开始下一轮循环</strong></li>
+</ol>
+<p>所以如果要在一个自己的线程实现Handler处理消息，一定要做的就是<strong>调用Looper类的prepare和loop方法</strong>，撘一个消息处理机制的架子出来，如果直接像在主线程一样初始化一个Handler，在下面就直接sendMessage是不行的，因为<strong>默认情况下一个子线程是不存在Looper的循环的</strong>，而之所以主线程可以这么用是因为主线程默认有消息队列的实现，所以不需调用Looper的prepare和loop方法也可以直接进行消息的发送和处理。</p>
+<p>有一个要注意的地方就是，loop方法里是开启了一个无限循环，所以<strong>loop方法调用之后，除非循环停止，否则无法运行loop方法后面的代码</strong>。</p>
+<p>那么问题来了，如何停止一个Looper？</p>
+<h2 id="停止一个Looper"><a href="#停止一个Looper" class="headerlink" title="停止一个Looper"></a>停止一个Looper</h2><p>前面已经知道，Looper会在loop方法中开启一个无限循环，现在问题是，如果我们在一个activity中开一个新线程，在新线程中为了使用Handler开启了Looper，那么在新线程依赖的activity退出后，由于Looper中有无限循环，新线程无法自己结束，就会造成内存泄漏，这时候就需要Looper中的quit方法了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">quit</span><span class="params">()</span> </span>&#123;</div><div class="line">        mQueue.quit(<span class="keyword">false</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">quitSafely</span><span class="params">()</span> </span>&#123;</div><div class="line">        mQueue.quit(<span class="keyword">true</span>);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>两个方法都调用了MessageQueue类的quit方法，而MessageQueue的quit方法根据传入的boolean值分别调用了removeAllMessagesLocked方法和removeAllFutureMessagesLocked方法，从方法名不难看出，它们一个是直接清除消息队列中所有的消息，一个是清除延迟的消息（通过delay系列方法发送的、当前时间不需要处理的消息），这两个方法调用后，消息队列不再接收消息，Looper也就停止运行。</p>
+<p>在新线程中开启Looper后，在适当的地方调用quit方法，可以避免内存泄漏，同时还要注意，<strong>如果loop方法后面还有代码，调用quit方法使循环停止后，如果程序没有停止，还可以继续运行loop方法后面的代码</strong>。</p>
+<h2 id="回到Handler的构造方法"><a href="#回到Handler的构造方法" class="headerlink" title="回到Handler的构造方法"></a>回到Handler的构造方法</h2><p>假设现在我们已经在一个需要用到Handler的线程中调用了Looper.prepare（），在调用loop方法之前，我们先初始化一个Handler对象（为什么要在loop方法之前初始化请回头看上文），于是回到了一开始分析的Handler的构造方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">Handler</span><span class="params">(Callback callback, <span class="keyword">boolean</span> async)</span> </span>&#123;</div><div class="line">        mLooper = Looper.myLooper();</div><div class="line">        <span class="keyword">if</span> (mLooper == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</div><div class="line">                <span class="string">"Can't create handler inside thread that has not called Looper.prepare()"</span>);</div><div class="line">        &#125;</div><div class="line">        mQueue = mLooper.mQueue;</div><div class="line">        mCallback = callback;</div><div class="line">        mAsynchronous = async;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>这里也是只留下主要代码，我们看到，这里Looper.myLooper（）已经可以返回一个当前线程的Looper对象了，然后将Looper对象的队列赋值到当前Handler的消息队列对象上，同时将回调对象和一个标志位也通过构造函数传入的参数赋值。</p>
+<p>还有一个三个参数的构造函数，只有在传入的参数中有Looper对象的时候才会最终被调用到：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">Handler</span><span class="params">(Looper looper, Callback callback, <span class="keyword">boolean</span> async)</span> </span>&#123;</div><div class="line">        mLooper = looper;</div><div class="line">        mQueue = looper.mQueue;</div><div class="line">        mCallback = callback;</div><div class="line">        mAsynchronous = async;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>也是将传入的三个参数赋值给Handler类中的Looper对象、回调对象、标志位，并将传入的Looper对象的队列赋值给mQueue。</p>
+<p>所以Handler的构造函数主要就是做两件事：</p>
+<ol>
+<li>将传入的参数赋值给自己对应的参数，通过传入的Looper对象或者通过myLooper获取当前线程的Looper对象；</li>
+<li>通过Looper对象获取消息队列</li>
+</ol>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢大佬<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -219,7 +300,7 @@
 		</ul>
 	</div>
 
-          
+      
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
@@ -232,290 +313,115 @@
 	</div>
 
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/08/11/message/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/08/09/life1/" class="archive-article-date">
-  	<time datetime="2017-08-09T09:53:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-09</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2017/08/09/life1/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">吐槽及后续安排</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/08/09/life1/">吐槽及后续安排</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">日常</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">吐槽</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/生活/" class="article-tag-list-link color3">生活</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Handler的构造函数（一）"><span class="toc-number">1.</span> <span class="toc-text">Handler的构造函数（一）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Looper的准备工作"><span class="toc-number">2.</span> <span class="toc-text">Looper的准备工作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#停止一个Looper"><span class="toc-number">3.</span> <span class="toc-text">停止一个Looper</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#回到Handler的构造方法"><span class="toc-number">4.</span> <span class="toc-text">回到Handler的构造方法</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/08/03/Picasso-1/" class="archive-article-date">
-  	<time datetime="2017-08-03T02:52:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-03</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/08/03/Picasso-1/">Picasso解析一（基本使用）</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Picasso</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">图片加载框架</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/07/25/EventBus-third/" class="archive-article-date">
-  	<time datetime="2017-07-25T10:06:32.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-25</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/07/25/EventBus-third/">EventBus使用与分析三（源码分析之注册）</a>
-    </h1>
-  
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">EventBus</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/07/20/EventBus2/" class="archive-article-date">
-  	<time datetime="2017-07-20T08:53:58.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-20</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/07/20/EventBus2/">EventBus使用与解析二（黏性事件）</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">EventBus</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/07/19/eventBus/" class="archive-article-date">
-  	<time datetime="2017-07-19T10:40:41.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-19</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/07/19/eventBus/">EventBus的使用和解析一</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">EventBus</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
   
 
-    
+  
+
+  
 
 
           </div>
@@ -538,8 +444,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
