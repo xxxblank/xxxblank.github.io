@@ -8,17 +8,17 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>消息处理机制 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。 在我浅显的理解里，整个消息机制由Handler、Message、Looper三个主要部分组成，Handler负责发送和处理消息，MessageQuene是按次序存储消息的队列，Looper负责不断的从消息队列中取出消息给Handle">
+  <meta name="description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。">
 <meta name="keywords" content="Android,源码,Handler,Message,消息处理机制">
 <meta property="og:type" content="article">
 <meta property="og:title" content="消息处理机制">
 <meta property="og:url" content="http://yoursite.com/2017/08/11/message/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。 在我浅显的理解里，整个消息机制由Handler、Message、Looper三个主要部分组成，Handler负责发送和处理消息，MessageQuene是按次序存储消息的队列，Looper负责不断的从消息队列中取出消息给Handle">
-<meta property="og:updated_time" content="2017-08-11T09:28:49.549Z">
+<meta property="og:description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。">
+<meta property="og:updated_time" content="2017-08-11T09:30:52.244Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="消息处理机制">
-<meta name="twitter:description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。 在我浅显的理解里，整个消息机制由Handler、Message、Looper三个主要部分组成，Handler负责发送和处理消息，MessageQuene是按次序存储消息的队列，Looper负责不断的从消息队列中取出消息给Handle">
+<meta name="twitter:description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -185,6 +185,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。</p>
+<a id="more"></a>
 <p>在我浅显的理解里，整个消息机制由Handler、Message、Looper三个主要部分组成，Handler负责发送和处理消息，MessageQuene是按次序存储消息的队列，Looper负责不断的从消息队列中取出消息给Handler的处理端。之前说看源码要找线头，既然消息是从Handler发出的，不妨就试试从Handler开始看。</p>
 <h2 id="Handler的构造函数（一）"><a href="#Handler的构造函数（一）" class="headerlink" title="Handler的构造函数（一）"></a>Handler的构造函数（一）</h2><p>点开Handler类的源码，可以很快找到Handler的几个构造函数，最后都会调用到下面两个构造函数处：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">Handler</span><span class="params">(Callback callback, <span class="keyword">boolean</span> async)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (FIND_POTENTIAL_LEAKS) &#123;</div><div class="line">            <span class="keyword">final</span> Class&lt;? extends Handler&gt; klass = getClass();</div><div class="line">            <span class="keyword">if</span> ((klass.isAnonymousClass() || klass.isMemberClass() || klass.isLocalClass()) &amp;&amp;</div><div class="line">                    (klass.getModifiers() &amp; Modifier.STATIC) == <span class="number">0</span>) &#123;</div><div class="line">                Log.w(TAG, <span class="string">"The following Handler class should be static or leaks might occur: "</span> +</div><div class="line">                    klass.getCanonicalName());</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        mLooper = Looper.myLooper();</div><div class="line">        <span class="keyword">if</span> (mLooper == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</div><div class="line">                <span class="string">"Can't create handler inside thread that has not called Looper.prepare()"</span>);</div><div class="line">        &#125;</div><div class="line">        mQueue = mLooper.mQueue;</div><div class="line">        mCallback = callback;</div><div class="line">        mAsynchronous = async;</div><div class="line">    &#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">Handler</span><span class="params">(Looper looper, Callback callback, <span class="keyword">boolean</span> async)</span> </span>&#123;</div><div class="line">        mLooper = looper;</div><div class="line">        mQueue = looper.mQueue;</div><div class="line">        mCallback = callback;</div><div class="line">        mAsynchronous = async;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
@@ -518,19 +519,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
               </li>
              
               <li class="article-tag-list-item">
