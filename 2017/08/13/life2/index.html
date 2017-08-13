@@ -6,23 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>EventBus的使用和解析一 | Rirsa&#39;s Home</title>
+  <title>不想 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="[TOC] 1. 基本定义EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。">
-<meta name="keywords" content="Android,EventBus">
+  <meta name="description" content="The article has been encrypted, please enter your password to view.">
+<meta name="keywords" content="日常">
 <meta property="og:type" content="article">
-<meta property="og:title" content="EventBus的使用和解析一">
-<meta property="og:url" content="http://yoursite.com/2017/07/19/eventBus/index.html">
+<meta property="og:title" content="不想">
+<meta property="og:url" content="http://yoursite.com/2017/08/13/life2/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="[TOC] 1. 基本定义EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。">
-<meta property="og:image" content="http://ww1.sinaimg.cn/large/006aoiFpgy1fhq5cha4c3j30ib01f0sr.jpg">
-<meta property="og:image" content="http://ww1.sinaimg.cn/large/006aoiFpgy1fhq5dpjqpij30hw01f3yi.jpg">
-<meta property="og:image" content="http://ww1.sinaimg.cn/large/006aoiFpgy1fhq5e6nvodj30h902wjrn.jpg">
-<meta property="og:updated_time" content="2017-08-10T08:46:16.999Z">
+<meta property="og:description" content="The article has been encrypted, please enter your password to view.">
+<meta property="og:updated_time" content="2017-08-13T07:11:30.456Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="EventBus的使用和解析一">
-<meta name="twitter:description" content="[TOC] 1. 基本定义EventBus用于不同线程间、组件间进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。">
-<meta name="twitter:image" content="http://ww1.sinaimg.cn/large/006aoiFpgy1fhq5cha4c3j30ib01f0sr.jpg">
+<meta name="twitter:title" content="不想">
+<meta name="twitter:description" content="The article has been encrypted, please enter your password to view.">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -168,89 +164,27 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-eventBus" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-life2" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      EventBus的使用和解析一
+      不想
     </h1>
   
 
         
-        <a href="/2017/07/19/eventBus/" class="archive-article-date">
-  	<time datetime="2017-07-19T10:40:41.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-19</time>
+        <a href="/2017/08/13/life2/" class="archive-article-date">
+  	<time datetime="2017-08-13T06:35:38.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-13</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>[TOC]</p>
-<h2 id="1-基本定义"><a href="#1-基本定义" class="headerlink" title="1. 基本定义"></a>1. 基本定义</h2><p>EventBus用于<strong>不同线程间、组件间</strong>进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。</p>
-<a id="more"></a>
-<p>EventBus使用注册-发布-订阅模式，是一个观察者模式的最佳实践，可以参照BroadcastReceiver的使用过程帮助理解，都需要先注册才能接收事件，都要重写用于接收并处理事件的方法，退出当前界面时都要取消注册。</p>
-<p>上面的话可能不是非常好理解，所谓<strong>用于不同线程间、组件间进行通信</strong>，换种说法就是<strong>代替了以往Intent、Handler、BroadcastReceiver</strong>实现在activity之间、fragment之间、activity与fragment之间、activity与service之间、主线程与子线程之间等等类似场景中传递数据进行通信的需求。</p>
-<p>还是不能理解的话，可以举两个落到实处的例子：</p>
-<ul>
-<li>某处需要进行网络请求的地方，由于网络请求是耗时操作，所以开启一个子线程进行网络请求，请求到数据后返回主线程更新UI。</li>
-<li>点击了某个列表的一个item，进到详情界面，在详情界面对这个item进行了点赞操作，需要同时更新列表中这一个item的点赞状态。</li>
-</ul>
-<p>第一个例子需要Handler进行线程间通信？第二个例子需要广播或者startActivityForResult？</p>
-<p>或者只需要一个EventBus。</p>
-<h2 id="2-基本使用"><a href="#2-基本使用" class="headerlink" title="2. 基本使用"></a>2. 基本使用</h2><p>下一篇文章会通过源码对注册的原理进行解释，这里先对整体的简单使用做一下总结。基础的使用只需要下面五步：</p>
-<h3 id="2-1-添加依赖"><a href="#2-1-添加依赖" class="headerlink" title="2.1 添加依赖"></a>2.1 添加依赖</h3><p><a href="https://github.com/greenrobot/EventBus" target="_blank" rel="external">EventBus的GitHub地址</a></p>
-<p>目前的最新依赖是</p>
-<p><strong>compile ‘org.greenrobot:eventbus:3.0.0’</strong></p>
-<h3 id="2-2-注册与取消注册"><a href="#2-2-注册与取消注册" class="headerlink" title="2.2 注册与取消注册"></a>2.2 注册与取消注册</h3><p>EventBus的注册与取消注册操作基本在生命周期方法中调用，例如我们可以在onCreate方法中注册，在onDestory方法中取消注册。</p>
-<p>注册使用如下代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">EventBus.getDefault().register(Object object);</div></pre></td></tr></table></figure>
-<p>通过源码我们知道，getDefault（）方法就是EventBus类的一个静态的获取单例的方法，register方法会在后面通过源码解释。</p>
-<p>注册后订阅者即可接收到events，而一旦不再需要接收事件（比如订阅事件的activity被finish了），则必须要调用unregister方法取消订阅。</p>
-<p>取消注册同样要先获取EventBus的单例：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">EventBus.getDefault().unregister(Object Object);</div></pre></td></tr></table></figure>
-<h3 id="2-3-编写事件的类"><a href="#2-3-编写事件的类" class="headerlink" title="2.3 编写事件的类"></a>2.3 编写事件的类</h3><p>简单说这就是一个实体类，用于将需要传递的数据封装到一起，这个类是发送事件时作为参数的类，也是接收事件的方法中作为参数的类，即EventBus<strong>通过参数类型对应事件的发送和接收</strong>。</p>
-<p>示例：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestEvent</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> msg;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TestEvent</span><span class="params">(<span class="keyword">int</span> msg)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.msg = msg;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getMsg</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> msg;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setMsg</span><span class="params">(<span class="keyword">int</span> msg)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.msg = msg;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>发送事件时将携带传送信息的该类对象放到post方法的参数中即可，对应的接收事件的方法参数应对应为（TestEvent event）；</p>
-<p>具体的接收事件和发送事件在下面两节详述，不过为了便于举例，下面的举例不再使用TestEvent作为事件类，而是使用Integer类作为事件类，道理是相同的，理解了就能相通。</p>
-<h3 id="2-4-编写用于接收事件的方法"><a href="#2-4-编写用于接收事件的方法" class="headerlink" title="2.4 编写用于接收事件的方法"></a>2.4 编写用于接收事件的方法</h3><p>相比2.0,EventBus3.0最明显的改动就是接收事件方法的编写上，老版本的EventBus需要让接收事件的方法必须以onEvent开头，对第一次接触EventBus的人们来说十分难以理解，3.0版本修改为引用注解，即<strong>在方法前标注@Subscribe，标注这个方法为接收事件的方法</strong>。</p>
-<p>Subscribe注解有三个属性，threadMode（enum类型）、 sticky（boolean类型）和priority（int类型），分别可以设置该方法所在线程、接收事件是否为黏性事件以及事件的优先级。这些都可以从Subscribe注解的源码中看到：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Documented</span></div><div class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</div><div class="line"><span class="meta">@Target</span>(&#123;ElementType.METHOD&#125;)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Subscribe &#123;</div><div class="line"></div><div class="line">    <span class="function">ThreadMode <span class="title">threadMode</span><span class="params">()</span> <span class="keyword">default</span> ThreadMode.POSTING</span></div><div class="line">    </div><div class="line">    <span class="keyword">boolean</span> <span class="title">sticky</span><span class="params">()</span> <span class="keyword">default</span> <span class="keyword">false</span>;</div><div class="line">    </div><div class="line">    <span class="function"><span class="keyword">int</span> <span class="title">priority</span><span class="params">()</span> <span class="keyword">default</span> 0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>threadCode是一个枚举量，可以选择POSTING、MAIN、BACKGROUND、ASYNC四个值，四个值分别可以起到的作用如下：</p>
-<ul>
-<li>POSTING：默认值，事件发布在哪个线程则该接收事件的方法运行在哪个线程</li>
-<li>MAIN：主线程，不论事件在哪个线程发布，到达接收事件的方法时都回到主线程，<strong>一般在这个方法中更新UI</strong></li>
-<li>BACKGROUND：这个值有些特殊，如果事件在非UI线程发布，则接收事件的方法就在当前线程运行；如果事件在UI线程发布，则接收事件的方法就会到一个单一的后台线程运行。<strong>这个后台线程是eventBus对当前activity的唯一的后台线程</strong>，所以所有设置为BACKGROUND的方法都会再这条线程中运行，所以<strong>这个事件接收方法中不要耗时太长的操作</strong>。</li>
-<li>ASYNC：不论事件是从主线程还是非UI线程发出，都会新建一个线程来运行接收事件的方法，每个事件处理方法都在一个新线程中，<strong>适用于进行网络请求或其他比较耗时的操作</strong>。</li>
-</ul>
-<p>这里写两个简单的示例验证一下上面的理论。</p>
-<p>第一个例子：</p>
-<p>新线程中发布事件，设置接收事件的方法为POSTING</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//发布事件处，注意要在发布之前register</span></div><div class="line"><span class="comment">//onCreate方法中或者button的点击事件中</span></div><div class="line"><span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</div><div class="line">                    <span class="meta">@Override</span></div><div class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">                        Log.e(<span class="string">"threadCodeSend"</span>,Thread.currentThread().getName());</div><div class="line">                        EventBus.getDefault().post(<span class="number">12345</span>);</div><div class="line">                    &#125;</div><div class="line">                &#125;).start();</div></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//接收事件的方法</span></div><div class="line"><span class="meta">@Subscribe</span>(threadMode = ThreadMode.POSTING)</div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testSubscribe</span><span class="params">(Integer msg)</span></span>&#123;</div><div class="line">        <span class="comment">//text.setText(msg+" integer  ");</span></div><div class="line">        Log.e(<span class="string">"threadCodeAccept"</span>,Thread.currentThread().getName());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>运行结果如下：</p>
-<p><img src="http://ww1.sinaimg.cn/large/006aoiFpgy1fhq5cha4c3j30ib01f0sr.jpg" alt="POSTING接收方法"></p>
-<p><strong>这里要注意，在接收事件的方法里参数类型我用的Integer而不是int，如果参数用int，程序不会报错但并不会接收到事件源发送的事件12345，这是因为EventBus源码需要使用反射获取参数的Class对象，所以参数只能是具体的类而不能是基本数据类型。</strong></p>
-<p>如果把上述代码中Log和发送事件的语句从新线程中拿出来放到主线程中运行，则运行结果变为：</p>
-<p><img src="http://ww1.sinaimg.cn/large/006aoiFpgy1fhq5dpjqpij30hw01f3yi.jpg" alt="POSTING接收方法2"></p>
-<p>第二个例子：</p>
-<p>将接收事件的方法threadCode设置为BACKGROUND。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//新线程中发送事件</span></div><div class="line"><span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</div><div class="line">       <span class="meta">@Override</span></div><div class="line">       <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">             Log.e(<span class="string">"threadCodeSend"</span>,Thread.currentThread().getName());</div><div class="line">             EventBus.getDefault().post(<span class="number">12345</span>);</div><div class="line">       &#125;</div><div class="line">&#125;).start();</div><div class="line"><span class="comment">//主线程中发送事件</span></div><div class="line">Log.e(<span class="string">"threadCodeSend"</span>,Thread.currentThread().getName());</div><div class="line">EventBus.getDefault().post(<span class="number">1234</span>);</div></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//接收事件的方法</span></div><div class="line"><span class="meta">@Subscribe</span>(threadMode = ThreadMode.BACKGROUND)</div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testSubscribe</span><span class="params">(Integer msg)</span></span>&#123;</div><div class="line">        <span class="comment">//text.setText(msg+" integer  ");</span></div><div class="line">        Log.e(<span class="string">"threadCodeAccept"</span>,Thread.currentThread().getName());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>运行结果如下：</p>
-<p><img src="http://ww1.sinaimg.cn/large/006aoiFpgy1fhq5e6nvodj30h902wjrn.jpg" alt="BACKGROUND接收方法"></p>
-<p>可以看到，在新线程中发送的事件，接收事件的方法同样运行在那条新线程中；而在主线程发送的方法，接收事件的方法就会运行到一条命名不同于普通新线程的后台线程去。</p>
-<p>MAIN和ASYNC相对比较好理解，这里不再用代码详述。</p>
-<h3 id="2-5-发送事件"><a href="#2-5-发送事件" class="headerlink" title="2.5 发送事件"></a>2.5 发送事件</h3><p>实际上在上面的举例中已经使用到了事件的发送，即如下代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">EventBus.getDefault().post(Object event);</div></pre></td></tr></table></figure>
-<p>需要注意的有两个，一个是发送事件前必须确保要接受消息的界面中EventBus已经注册，二是参数必须是Object，因此参数中使用int等基本数据类型本身是不正确的，但是由于Java自带的自动装箱(Autoboxing)，因此填到参数中的基本数据类型会自动转换为对应的类，所以上面的例子中我可以直接使用post（1234）来发送事件。</p>
-<p>但是另一方面，接收事件的方法处不会自动拆箱，所以如果接收方法的参数使用int是接收不到post（1234）发送的事件的。</p>
-<p>当然，上面第一个需要注意的事是针对这个普通的事件发送而言的，实际上如果某个界面还没有注册EventBus也可以发送事件，并实现注册后再接收到该事件的需求，但我把这种事件发送放在进阶的使用中，本章不再赘述。</p>
-<p>EventBus的基本使用到这里基本结束，下一篇会讲述进阶的使用方式，以及从源码层面解析EventBus。</p>
-
+        <link href="/style.css" rel="stylesheet" type="text/css"><script src="/crypto-js.js"></script><script src="/mcommon.js"></script><script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script> <div id="security"> <div> <div class="input-container"> <input type="password" class="form-control" id="pass" placeholder=" 请输入密码后阅读博客内容 "/> <label for="pass"> 请输入密码后阅读博客内容 </label> <div class="bottom-line"></div> </div> </div> </div> <div id="encrypt-blog" style="display:none"> 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 </div>
       
 
       
@@ -294,11 +228,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">EventBus</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">日常</a>
         		</li>
       		
 		</ul>
@@ -310,7 +240,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
+        			<a href="/categories/生活/" class="article-tag-list-link color3">生活</a>
         		</li>
       		
 		</ul>
@@ -365,7 +295,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/07/19/eventBus/" alt="微信分享二维码">
+      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/08/13/life2/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -379,15 +309,11 @@
   
 <nav id="article-nav">
   
-    <a href="/2017/07/20/EventBus2/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          EventBus使用与解析二（黏性事件）
-        
-      </div>
-    </a>
   
+    <a href="/2017/08/11/message/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">消息处理机制</div>
+      <i class="icon-circle-right"></i>
+    </a>
   
 </nav>
 
@@ -404,19 +330,6 @@
             </div>
         </div>
         
-        
-        <div class="toc-container tooltip-left">
-            <i class="icon-font icon-category"></i>
-            <div class="tooltip tooltip-east">
-                <span class="tooltip-item">
-                </span>
-                <span class="tooltip-content">
-                    <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-基本定义"><span class="toc-number">1.</span> <span class="toc-text">1. 基本定义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-基本使用"><span class="toc-number">2.</span> <span class="toc-text">2. 基本使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-添加依赖"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 添加依赖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-注册与取消注册"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 注册与取消注册</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-编写事件的类"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 编写事件的类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-编写用于接收事件的方法"><span class="toc-number">2.4.</span> <span class="toc-text">2.4 编写用于接收事件的方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-发送事件"><span class="toc-number">2.5.</span> <span class="toc-text">2.5 发送事件</span></a></li></ol></li></ol>
-                    </div>
-                </span>
-            </div>
-        </div>
         
     </div>
 </aside>
