@@ -9,13 +9,13 @@
   <title>消息处理机制 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。">
-<meta name="keywords" content="Android,源码,Handler,Message,消息处理机制">
+<meta name="keywords" content="Android,源码,消息处理机制">
 <meta property="og:type" content="article">
 <meta property="og:title" content="消息处理机制">
 <meta property="og:url" content="http://yoursite.com/2017/08/11/message/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
 <meta property="og:description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。">
-<meta property="og:updated_time" content="2017-08-12T08:34:12.085Z">
+<meta property="og:updated_time" content="2017-08-13T12:43:30.178Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="消息处理机制">
 <meta name="twitter:description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。">
@@ -243,8 +243,44 @@
 <p>所以Handler的构造函数主要就是做两件事：</p>
 <ol>
 <li>将传入的参数赋值给自己对应的参数，通过传入的Looper对象或者通过myLooper获取当前线程的Looper对象；</li>
-<li>通过Looper对象获取消息队列</li>
+<li>通过Looper对象获取消息队列，并赋值给自己的队列属性</li>
 </ol>
+<p>到这里，Looper初始化完成，消息队列初始化完成，Handler初始化完成，再调用一下Looper.loop（），开启队列循环，等待消息传入到队列中，一个消息处理机制的架子就搭起来了，接下来该让这个架子运转起来了。</p>
+<h2 id="发送消息的Handler"><a href="#发送消息的Handler" class="headerlink" title="发送消息的Handler"></a>发送消息的Handler</h2><p>用Handler发送消息，大多数人应该都很熟悉，主要分为两个系列，一个是参数带Runnable接口对象的post系列，另一个是用的比较频繁的send系列。</p>
+<h3 id="post系列"><a href="#post系列" class="headerlink" title="post系列"></a>post系列</h3><p>其实看下源码，post的系列方法最后调用的还是sendMessage系列方法，但是post方法传入的是Runnable对象，所以中间还有一个getPostMessage方法，方法的作用自然就是将Runnable对象转换为sendMessage系列方法所需要的Message对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Message <span class="title">getPostMessage</span><span class="params">(Runnable r)</span> </span>&#123;</div><div class="line">        Message m = Message.obtain();</div><div class="line">        m.callback = r;</div><div class="line">        <span class="keyword">return</span> m;</div><div class="line">    &#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Message <span class="title">getPostMessage</span><span class="params">(Runnable r, Object token)</span> </span>&#123;</div><div class="line">        Message m = Message.obtain();</div><div class="line">        m.obj = token;</div><div class="line">        m.callback = r;</div><div class="line">        <span class="keyword">return</span> m;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>转换方法很简单，通过Message的obtain方法获取一个Message对象，将Runnable对象赋值给Message的callback属性，如果有第二个Object对象参数，将Object对象赋值给Message的obj属性，最后将Message返回。</p>
+<p>返回后还是调用到了sendMessage系列方法，所以我们继续来看。</p>
+<h3 id="sendMessage系列"><a href="#sendMessage系列" class="headerlink" title="sendMessage系列"></a>sendMessage系列</h3><p>先看一个经常用的，sendMessage(Message msg)方法，源码中该方法调用了sendMessageDelayed(Message msg, long delayMillis)方法，只不过第二个参数传入了0，相当于发送了一个延迟时间为0的消息，而sendMessageDelayed方法又调用了sendMessageAtTime(Message msg, long uptimeMillis) 方法，第二个参数传入发送消息的绝对时间（从系统启动到消息发送的毫秒数，也就是sendMessageDelayed时的系统时间+delay时间）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">sendMessageAtTime</span><span class="params">(Message msg, <span class="keyword">long</span> uptimeMillis)</span> </span>&#123;</div><div class="line">        MessageQueue queue = mQueue;</div><div class="line">        <span class="keyword">if</span> (queue == <span class="keyword">null</span>) &#123;</div><div class="line">            RuntimeException e = <span class="keyword">new</span> RuntimeException(</div><div class="line">                    <span class="keyword">this</span> + <span class="string">" sendMessageAtTime() called with no mQueue"</span>);</div><div class="line">            Log.w(<span class="string">"Looper"</span>, e.getMessage(), e);</div><div class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> enqueueMessage(queue, msg, uptimeMillis);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>方法中首先拿到了在Handler构造方法中初始化好的消息队列对象mQueue（注意这里的消息队列也就是当前线程的Looper对象中初始化好的消息队列），判断队列对象不为空后，返回enqueueMessage(queue, msg, uptimeMillis)方法的返回值，我们看一下enqueueMessage(queue, msg, uptimeMillis)方法：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line">private boolean enqueueMessage(MessageQueue queue, Message msg, long uptimeMillis) &#123;</div><div class="line">        msg.target = this;</div><div class="line">        if (mAsynchronous) &#123;</div><div class="line">            msg.setAsynchronous(true);</div><div class="line">        &#125;</div><div class="line">        return queue.enqueueMessage(msg, uptimeMillis);</div><div class="line">    &#125;</div><div class="line">```	</div><div class="line"></div><div class="line">有没有看到熟悉的东西？是的，方法中第一行就对Message的target属性做了赋值操作，将当前的Handler对象引用赋值给了msg的target属性，而这个target属性会在Looper的loop方法中将这个消息从消息队列中取出来之后通过msg.target调用到。</div><div class="line"></div><div class="line">最后调用到的是MessageQueue的enqueueMessage方法，从名字就能看出来，这个方法是MessageQueue用来将消息放入队列的方法，具体是通过对消息对象的when属性（传入的uptimeMillis）的判断进行的队列排序，这里先暂时不展开说，留在MessageQueue中详解。</div><div class="line"></div><div class="line">sendMessage系列的其他方法也是换汤不换药，最后都是通过各种渠道调用到了sendMessageAtTime 方法，稍微有点不同的是sendMessageAtFrontOfQueue方法，它直接调用了enqueueMessage方法，在第三个参数uptimeMillis传入0，所以就像sendMessageAtFrontOfQueue这个方法名所描述的，这个方法会直接将消息对象放到队列的最前端。</div><div class="line"></div><div class="line">总之，经过enqueueMessage方法后，由handler发送的消息通过Handler类中与Looper绑定的MessageQueue对象将消息放到了Looper的消息队列中。而Looper在初始化好后一直在死循环等待消息队列中出现消息，此时队列中出现消息后，Looper的loop方法的死循环中马上通过队列对象的next方法获取到队列中的消息msg，然后通过msg.target.dispatchMessage(msg)来处理消息。</div><div class="line"></div><div class="line">target就是上面在enqueueMessage方法中赋值的Handler对象，所以在发送消息后，最后处理消息的还是Handler。</div><div class="line"></div><div class="line">## 处理消息的Handler</div><div class="line"></div><div class="line">消息的处理就很直接了，Looper的loop循环中拿到消息后通过消息对象的target属性调用了Handler的dispatchMessage方法，所以我们直接来看这个方法：</div><div class="line"></div><div class="line">```java</div><div class="line">public void dispatchMessage(Message msg) &#123;</div><div class="line">        if (msg.callback != null) &#123;</div><div class="line">            handleCallback(msg);</div><div class="line">        &#125; else &#123;</div><div class="line">            if (mCallback != null) &#123;</div><div class="line">                if (mCallback.handleMessage(msg)) &#123;</div><div class="line">                    return;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">            handleMessage(msg);</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>方法很简单，是一个多层的if判断，首先对传入的Message对象的callback属性做了一个判断，如果不为空则调用handleCallback方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">handleCallback</span><span class="params">(Message message)</span> </span>&#123;</div><div class="line">        message.callback.run();</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>前面已经知道，message对象的callback属性是在调用post系列方法发送消息的时候赋值的Runnable对象，所以这个handleCallback方法做的事很简单，就是让传入的Runnable对象运行起来，运行传入的Runnable对象的run方法中的代码。</p>
+<p>如果传入的Message对象callback属性为null，则判断mCallback是否为空，mCallback是什么呢？是一个Callback接口对象，该接口定义在Handler内：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Callback</span> </span>&#123;</div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span></span>;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>而这个接口对象的赋值，就在前面说到过的Handler的构造函数中，不过我们平时多数用到的构造函数不是前面分析过的两个甚至三个参数的构造函数，而是这个：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">Handler</span><span class="params">(Callback callback)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>(callback, <span class="keyword">false</span>);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>这个构造方法则会最终调用到前面分析的两个参数的构造函数，这也是我们平时写Handler时经常用到的写法的来源：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">handler = <span class="keyword">new</span> Handler(<span class="keyword">new</span> Handler.Callback() &#123;</div><div class="line">                    <span class="meta">@Override</span></div><div class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</div><div class="line">                        Log.e(<span class="string">"hub!!"</span>,<span class="string">"get msg"</span>);</div><div class="line">                        <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">                    &#125;</div><div class="line">                &#125;);</div></pre></td></tr></table></figure>
+<p>如果mCallback对象不为null，则就会调用到传入的Callback对象的handleMessage方法，对应上面的代码，也就会打印出“get msg”的log。</p>
+<p>此时有一个细节需要注意，调用接口方法时mCallback.handleMessage(msg)本身是一个if语句的判断条件，而这个方法是有返回值boolean值的，我们再看一下源码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (mCallback != <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="keyword">if</span> (mCallback.handleMessage(msg)) &#123;</div><div class="line">                    <span class="keyword">return</span>;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">handleMessage(msg);</div></pre></td></tr></table></figure>
+<p>很明显，如果mCallback的handleMessage方法返回true，则代码会运行到return，方法就此结束，而如果mCallback的handleMessage方法返回false，则方法还可以继续向下运行，运行到Handler类自己的handleMessage方法！</p>
+<p>当然，如果mCallback对象为空，也会直接运行到Handler类自己的handleMessage方法。</p>
+<p>我们看一下Handler类自己的handleMessage方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line">     * Subclasses must implement this to receive messages.</div><div class="line">     */</div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>一个空方法，方法上的注释也写的很清楚，这是由子类实现来接收消息的方法，而这也是我们另一个常用的handler写法的来源：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">handler = <span class="keyword">new</span> Handler()&#123;</div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</div><div class="line">                <span class="comment">//do something</span></div><div class="line">            &#125;</div><div class="line">        &#125;;</div></pre></td></tr></table></figure>
+<p>不知道这么多弯弯绕绕看晕了没有，简单来说，接收到消息的Handler，根据传入的Message的callback属性和自己的mCallback属性是否为空，可以对消息有三种处理方式：</p>
+<ul>
+<li>Message对象的callback属性不为空时触发，优先级最高，处理方式是让代表一条Runnable线程的callback对象run起来；</li>
+<li>Message对象的callback为空，Handler对象自己的mCallback对象不为空触发，优先级为中，处理方式为调用传入的mCallback对象的handleMessage方法；</li>
+<li>Message对象的callback为空且Handler对象自己的mCallback对象为空时才有机会触发，优先级最低，处理方式为调用Handler自己的handleMessage方法。还有一种情况是Message对象的callback为空，Handler的mCallback不为空，但是Handler的mCallback对象的handleMessage方法返回false，此时也可以运行到Handler自己的handleMessage方法。</li>
+</ul>
+<p>也就是说，虽然Handler的handleMessage空方法的注释上标着由子类实现来接收消息，但是真的接收消息的时候它的处理优先级是最低的2333，而Message的callback不为空时优先级虽然是最高的，但此时由于只是让callback的线程运行起来，所以传入的Message是没什么卵用的，真正可以对传入的Message做处理的是后两种处理方式，这里应该注意一下。</p>
+<p>至此消息处理机制的发送消息（Handler），运送消息（Looper），处理消息（Handler）都详解完毕，算是大概摸出了一个架子，当然完整的消息处理机制不止这些，下面我们来看消息的产生（Message）和消息的排列（MessageQueue）。</p>
 
       
 
@@ -294,14 +330,6 @@
       		 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Handler</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Message</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
@@ -424,7 +452,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Handler的构造函数（一）"><span class="toc-number">1.</span> <span class="toc-text">Handler的构造函数（一）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Looper的准备工作"><span class="toc-number">2.</span> <span class="toc-text">Looper的准备工作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#停止一个Looper"><span class="toc-number">3.</span> <span class="toc-text">停止一个Looper</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#回到Handler的构造方法"><span class="toc-number">4.</span> <span class="toc-text">回到Handler的构造方法</span></a></li></ol>
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Handler的构造函数（一）"><span class="toc-number">1.</span> <span class="toc-text">Handler的构造函数（一）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Looper的准备工作"><span class="toc-number">2.</span> <span class="toc-text">Looper的准备工作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#停止一个Looper"><span class="toc-number">3.</span> <span class="toc-text">停止一个Looper</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#回到Handler的构造方法"><span class="toc-number">4.</span> <span class="toc-text">回到Handler的构造方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#发送消息的Handler"><span class="toc-number">5.</span> <span class="toc-text">发送消息的Handler</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#post系列"><span class="toc-number">5.1.</span> <span class="toc-text">post系列</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#sendMessage系列"><span class="toc-number">5.2.</span> <span class="toc-text">sendMessage系列</span></a></li></ol></li></ol>
                     </div>
                 </span>
             </div>
@@ -538,19 +566,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -562,11 +586,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Handler</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Message</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
               </li>
              
               <li class="article-tag-list-item">
