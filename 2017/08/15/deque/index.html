@@ -8,18 +8,18 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>ArrayDeque的栈和队列实现 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Java中是有Stack类进行栈操作的，但是在很多文档和博客上已经不推荐使用Stack类，而另一方面，Java中没有Queue的类（只有一个接口），Deque接口继承了Queue接口，而有两个类实现了Deque接口，它们是LinkedList和ArrayDeque，也就是这两个类可以实现栈和队列的功能，但是最推荐的用来实现栈和队列的类是ArrayDeque。 要讲ArrayDeque，便要先提一下">
+  <meta name="description" content="Java中是有Stack类进行栈操作的，但是在很多文档和博客上已经不推荐使用Stack类，而另一方面，Java中没有Queue的类（只有一个接口），Deque接口继承了Queue接口，而有两个类实现了Deque接口，它们是LinkedList和ArrayDeque，也就是这两个类可以实现栈和队列的功能，但是最推荐的用来实现栈和队列的类是ArrayDeque。">
 <meta name="keywords" content="Java,数据结构,杂记">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ArrayDeque的栈和队列实现">
 <meta property="og:url" content="http://yoursite.com/2017/08/15/deque/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="Java中是有Stack类进行栈操作的，但是在很多文档和博客上已经不推荐使用Stack类，而另一方面，Java中没有Queue的类（只有一个接口），Deque接口继承了Queue接口，而有两个类实现了Deque接口，它们是LinkedList和ArrayDeque，也就是这两个类可以实现栈和队列的功能，但是最推荐的用来实现栈和队列的类是ArrayDeque。 要讲ArrayDeque，便要先提一下">
+<meta property="og:description" content="Java中是有Stack类进行栈操作的，但是在很多文档和博客上已经不推荐使用Stack类，而另一方面，Java中没有Queue的类（只有一个接口），Deque接口继承了Queue接口，而有两个类实现了Deque接口，它们是LinkedList和ArrayDeque，也就是这两个类可以实现栈和队列的功能，但是最推荐的用来实现栈和队列的类是ArrayDeque。">
 <meta property="og:image" content="http://images2015.cnblogs.com/blog/939998/201605/939998-20160507172937875-1444735637.png">
-<meta property="og:updated_time" content="2017-08-15T10:46:54.512Z">
+<meta property="og:updated_time" content="2017-08-15T10:48:40.071Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ArrayDeque的栈和队列实现">
-<meta name="twitter:description" content="Java中是有Stack类进行栈操作的，但是在很多文档和博客上已经不推荐使用Stack类，而另一方面，Java中没有Queue的类（只有一个接口），Deque接口继承了Queue接口，而有两个类实现了Deque接口，它们是LinkedList和ArrayDeque，也就是这两个类可以实现栈和队列的功能，但是最推荐的用来实现栈和队列的类是ArrayDeque。 要讲ArrayDeque，便要先提一下">
+<meta name="twitter:description" content="Java中是有Stack类进行栈操作的，但是在很多文档和博客上已经不推荐使用Stack类，而另一方面，Java中没有Queue的类（只有一个接口），Deque接口继承了Queue接口，而有两个类实现了Deque接口，它们是LinkedList和ArrayDeque，也就是这两个类可以实现栈和队列的功能，但是最推荐的用来实现栈和队列的类是ArrayDeque。">
 <meta name="twitter:image" content="http://images2015.cnblogs.com/blog/939998/201605/939998-20160507172937875-1444735637.png">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
@@ -187,6 +187,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>Java中是有Stack类进行栈操作的，但是在很多文档和博客上已经不推荐使用Stack类，而另一方面，Java中没有Queue的类（只有一个接口），Deque接口继承了Queue接口，而有两个类实现了Deque接口，它们是LinkedList和ArrayDeque，也就是这两个类可以实现栈和队列的功能，但是最推荐的用来实现栈和队列的类是ArrayDeque。</p>
+<a id="more"></a>
 <p>要讲ArrayDeque，便要先提一下Deque接口，Deque的含义是“double ended queue”，即双端队列，它继承了Queue接口，既可以当队列使用，也可以当栈使用，ArrayDeque便是实现了这个接口以及接口中的方法。</p>
 <p>从名字不难看出，ArrayDeque底层是使用数组实现的，为了满足队列可以两端进行添加删除操作的需求，该数组还需要使用循环数组，需要注意的是，<strong>ArrayDeque是非线程安全的，多个线程同步使用的时候需要程序员手动同步</strong>。</p>
 <p>ArrayDeque原理图如下：</p>
@@ -469,6 +470,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
@@ -477,15 +482,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">日常</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">吐槽</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -501,7 +498,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+                <a href="javascript:void(0)" class="js-tag color3">日常</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">吐槽</a>
               </li>
              
               <li class="article-tag-list-item">
