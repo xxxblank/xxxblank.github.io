@@ -164,6 +164,118 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-deque" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/08/15/deque/">ArrayDeque的栈和队列实现</a>
+    </h1>
+  
+
+        
+        <a href="/2017/08/15/deque/" class="archive-article-date">
+  	<time datetime="2017-08-15T10:44:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-15</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Java中是有Stack类进行栈操作的，但是在很多文档和博客上已经不推荐使用Stack类，而另一方面，Java中没有Queue的类（只有一个接口），Deque接口继承了Queue接口，而有两个类实现了Deque接口，它们是LinkedList和ArrayDeque，也就是这两个类可以实现栈和队列的功能，但是最推荐的用来实现栈和队列的类是ArrayDeque。</p>
+<p>要讲ArrayDeque，便要先提一下Deque接口，Deque的含义是“double ended queue”，即双端队列，它继承了Queue接口，既可以当队列使用，也可以当栈使用，ArrayDeque便是实现了这个接口以及接口中的方法。</p>
+<p>从名字不难看出，ArrayDeque底层是使用数组实现的，为了满足队列可以两端进行添加删除操作的需求，该数组还需要使用循环数组，需要注意的是，<strong>ArrayDeque是非线程安全的，多个线程同步使用的时候需要程序员手动同步</strong>。</p>
+<p>ArrayDeque原理图如下：</p>
+<p><img src="http://images2015.cnblogs.com/blog/939998/201605/939998-20160507172937875-1444735637.png" alt="图片来自网络"></p>
+<p>ArrayDeque向头部添加元素的方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addFirst</span><span class="params">(E e)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (e == <span class="keyword">null</span>)<span class="comment">//不允许放入null</span></div><div class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">    elements[head = (head - <span class="number">1</span>) &amp; (elements.length - <span class="number">1</span>)] = e;<span class="comment">//2.下标是否越界</span></div><div class="line">    <span class="keyword">if</span> (head == tail)<span class="comment">//1.空间是否够用</span></div><div class="line">        doubleCapacity();<span class="comment">//扩容</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>首先可以看到，对ArrayDeque元素的操作不允许有null存在，这个对ArrayDeque的其他方法也一样。后面是元素的插入，而在元素的插入中解决了下标的越界问题。<strong>head = (head - 1) &amp; (elements.length - 1)</strong>相当于取余，因为elements.length必需是2的指数倍，elements - 1就是二进制低位全1，跟head - 1相与之后就起到了取模的作用。</p>
+<p>再往后，如果循环数组的头和尾撞到了一起，则说明现在这个数组已经被填满，于是就调用扩容方法doubleCapacity：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doubleCapacity</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">assert</span> head == tail;</div><div class="line">        <span class="keyword">int</span> p = head;</div><div class="line">        <span class="keyword">int</span> n = elements.length;</div><div class="line">        <span class="keyword">int</span> r = n - p; <span class="comment">// number of elements to the right of p</span></div><div class="line">        <span class="keyword">int</span> newCapacity = n &lt;&lt; <span class="number">1</span>;</div><div class="line">        <span class="keyword">if</span> (newCapacity &lt; <span class="number">0</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Sorry, deque too big"</span>);</div><div class="line">        Object[] a = <span class="keyword">new</span> Object[newCapacity];</div><div class="line">        System.arraycopy(elements, p, a, <span class="number">0</span>, r);</div><div class="line">        System.arraycopy(elements, <span class="number">0</span>, a, r, p);</div><div class="line">        elements = a;</div><div class="line">        head = <span class="number">0</span>;</div><div class="line">        tail = n;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>其实整个过程就是获取一个原数组的两倍长度的新数组，然后将原数组的元素复制到新数组中，复制时先复制头部右侧的元素，再复制头部左侧的元素，其实也就是从head往tail的顺序将元素拷贝到新数组的从0开始的各个位置上。</p>
+<p>与addFirst相对应的，ArrayDeque还有addLast方法，可以实现在尾部添加元素，其中对下标的处理，以及扩容的处理与addFirst中相同，其他方法的处理也大同小异，这里不再赘述，只标注各个方法的作用。</p>
+<ul>
+<li>addFirst（）在头部添加元素</li>
+<li>addLast（）在尾部添加元素</li>
+<li>pollFirst（）删除并获取头部元素</li>
+<li>pollLast（）删除并获取尾部元素</li>
+<li>peekFirst（）获取但不删除头部元素</li>
+<li>peekLast（）获取但不删除尾部元素</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">数据结构</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">杂记</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/杂记/" class="article-tag-list-link color3">杂记</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2017/08/15/deque/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-life2" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -925,6 +1037,18 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">吐槽</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
               </li>
              
               <li class="article-tag-list-item">
