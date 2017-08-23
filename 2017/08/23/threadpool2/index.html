@@ -6,22 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Picasso解析一（基本使用） | Rirsa&#39;s Home</title>
+  <title>线程池源码分析一 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="使用图片加载框架的意义是什么呢？明明自己就可以使用网络请求从任何地方请求一张图片下来，为什么还要使用图片加载框架来加载图片？">
-<meta name="keywords" content="Android,Picasso,图片加载框架">
+  <meta name="description" content="回到ThreadPoolExecutor正如先前看到的，ThreadPoolExecutor有四个构造函数，其中最简单的一个都有五个参数，然而它们最终调用的其实都是七个参数的那个构造函数： 123456789101112131415161718192021public ThreadPoolExecutor(int corePoolSize,">
+<meta name="keywords" content="Java,源码,并发">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Picasso解析一（基本使用）">
-<meta property="og:url" content="http://yoursite.com/2017/08/03/Picasso-1/index.html">
+<meta property="og:title" content="线程池源码分析一">
+<meta property="og:url" content="http://yoursite.com/2017/08/23/threadpool2/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="使用图片加载框架的意义是什么呢？明明自己就可以使用网络请求从任何地方请求一张图片下来，为什么还要使用图片加载框架来加载图片？">
-<meta property="og:image" content="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3z6ofbj30r00zb1kx.jpg">
-<meta property="og:image" content="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3hbpuej30tz10cu0x.jpg">
-<meta property="og:updated_time" content="2017-08-08T05:35:35.134Z">
+<meta property="og:description" content="回到ThreadPoolExecutor正如先前看到的，ThreadPoolExecutor有四个构造函数，其中最简单的一个都有五个参数，然而它们最终调用的其实都是七个参数的那个构造函数： 123456789101112131415161718192021public ThreadPoolExecutor(int corePoolSize,">
+<meta property="og:updated_time" content="2017-08-23T09:36:38.453Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Picasso解析一（基本使用）">
-<meta name="twitter:description" content="使用图片加载框架的意义是什么呢？明明自己就可以使用网络请求从任何地方请求一张图片下来，为什么还要使用图片加载框架来加载图片？">
-<meta name="twitter:image" content="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3z6ofbj30r00zb1kx.jpg">
+<meta name="twitter:title" content="线程池源码分析一">
+<meta name="twitter:description" content="回到ThreadPoolExecutor正如先前看到的，ThreadPoolExecutor有四个构造函数，其中最简单的一个都有五个参数，然而它们最终调用的其实都是七个参数的那个构造函数： 123456789101112131415161718192021public ThreadPoolExecutor(int corePoolSize,">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -167,71 +164,110 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Picasso-1" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-threadpool2" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      Picasso解析一（基本使用）
+      线程池源码分析一
     </h1>
   
 
         
-        <a href="/2017/08/03/Picasso-1/" class="archive-article-date">
-  	<time datetime="2017-08-03T02:52:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-03</time>
+        <a href="/2017/08/23/threadpool2/" class="archive-article-date">
+  	<time datetime="2017-08-23T09:30:50.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-23</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>使用图片加载框架的意义是什么呢？明明自己就可以使用网络请求从任何地方请求一张图片下来，为什么还要使用图片加载框架来加载图片？</p>
-<a id="more"></a>
-<p>一个简单的例子，在一个listView中每个item都有自己的图片要请求显示，且滑动出屏幕的item会被回收，在这种需求下，图片加载要考虑的就不止是单纯的网络请求和ui显示，还要有缓存、线程调度、资源回收、内存占用等问题，处理不好便会十分卡顿，稍不注意就是oom。</p>
-<p>而图片加载框架，就是将多级缓存、异步线程调度、图片压缩等都做好了封装，使用者不需再关注内存占用、oom、网络请求等问题，可以将更多的精力都放在业务逻辑上，图片加载只用一行代码就给你完美的处理好，本次就针对图片加载框架Picasso进行一下解析。</p>
-<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>像如今盛行的大部分框架一样，源码暂且不谈，使用绝对要简便至上，一般的需求只需要如下一行代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Picasso.with(GlideTest.<span class="keyword">this</span>).load(R.mipmap.ic_launcher).into(img);</div></pre></td></tr></table></figure>
-<p>with()方法中传入上下文context，load方法里可以传入本地文件、指向本地资源文件的R文件地址、url字符串、uri对象四种参数，into参数传入要加载图片的控件对象。</p>
-<p>一行代码下来，运行起APP，就可以看到图片加载到了控件上，当然Picasso所做的事不止于此，它背后已经默默为你开了线程池、初始化好了缓存、做了图片压缩等等工作，这些后面详细分析。</p>
-<p>继续回到使用上，前面说的那一行代码足以解决大部分需求，还有一部分可能会使用到的需求Picasso也考虑的很全面，可以看到load方法返回了一个RequestCreator对象，而在RequestCreator类中，Picasso开发者已经为我们封装好了所有可能用到的方法：</p>
+        <h2 id="回到ThreadPoolExecutor"><a href="#回到ThreadPoolExecutor" class="headerlink" title="回到ThreadPoolExecutor"></a>回到ThreadPoolExecutor</h2><p>正如先前看到的，ThreadPoolExecutor有四个构造函数，其中最简单的一个都有五个参数，然而它们最终调用的其实都是七个参数的那个构造函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize,</span></span></div><div class="line">                              <span class="keyword">int</span> maximumPoolSize,</div><div class="line">                              <span class="keyword">long</span> keepAliveTime,</div><div class="line">                              TimeUnit unit,</div><div class="line">                              BlockingQueue&lt;Runnable&gt; workQueue,</div><div class="line">                              ThreadFactory threadFactory,</div><div class="line">                              RejectedExecutionHandler handler) &#123;</div><div class="line">        <span class="keyword">if</span> (corePoolSize &lt; <span class="number">0</span> ||</div><div class="line">            maximumPoolSize &lt;= <span class="number">0</span> ||</div><div class="line">            maximumPoolSize &lt; corePoolSize ||</div><div class="line">            keepAliveTime &lt; <span class="number">0</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</div><div class="line">        <span class="keyword">if</span> (workQueue == <span class="keyword">null</span> || threadFactory == <span class="keyword">null</span> || handler == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        <span class="keyword">this</span>.corePoolSize = corePoolSize;</div><div class="line">        <span class="keyword">this</span>.maximumPoolSize = maximumPoolSize;</div><div class="line">        <span class="keyword">this</span>.workQueue = workQueue;</div><div class="line">        <span class="keyword">this</span>.keepAliveTime = unit.toNanos(keepAliveTime);</div><div class="line">        <span class="keyword">this</span>.threadFactory = threadFactory;</div><div class="line">        <span class="keyword">this</span>.handler = handler;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>构造函数做的事很简单，对各个参数根据参数传入的值进行赋值，每个参数的意义如下：</p>
 <ul>
-<li><p>placeholder方法<br>这个方法可以用来在加载图片而图片还没有加载出来的时候显示一张占位图，使用户知道当前图片还在加载，不至于出现一片空白这种糟糕的用户体验。它有两个互相重载的方法，一个参数可以传入int类型的资源id，另一个参数是Drawable类型的资源对象。<br>使用方法也很简单，因为是RequestCreator类中的方法，所以只需要在之前的一行代码中在load之后、into之前调用即可。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Picasso.with(GlideTest.<span class="keyword">this</span>).load(R.mipmap.ic_launcher).placeholder(R.mipmap.ic_launcher_round).into(img);</div></pre></td></tr></table></figure>
-</li>
-<li><p>error方法<br>设置请求图片出错的时候显示的图片，使用户知道图片加载错误了，也是有两个重载方法，分别可以传入资源id和drawable对象，用法与placeholder差不多，不再赘述。</p>
-</li>
-<li><p>tag方法<br>用于为当前请求分配标签，用于统一管理相关的请求，参数是一个object对象，可以传入任意Object的子类。与这个方法有关的有Picasso类中的cancelTag(Object)、pauseTag(Object)、resumeTag(Object)，分别用于对设置了对应tag的请求进行取消、暂停、重新启动操作。<br>适用这个方法的典型情景是，在列表视图中，如果快速进行滑动，则完全可以在滑动的时候暂停所有网络请求，在停止滑动的时候再次开始请求，实现这种需求的方法就是利用同一个tag在适当的地方调用resumeTag和pauseTag。<br>示例如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">  <span class="comment">//adapter中</span></div><div class="line">  Picasso.with(parent.getContext())</div><div class="line">                    .load(paths.get(position)).fit().tag(<span class="string">"item"</span>).into(holder.img);</div><div class="line"><span class="comment">//activity中</span></div><div class="line">list.setOnScrollListener(<span class="keyword">new</span> AbsListView.OnScrollListener() &#123;</div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onScrollStateChanged</span><span class="params">(AbsListView view, <span class="keyword">int</span> scrollState)</span> </span>&#123;</div><div class="line">                <span class="keyword">switch</span> (scrollState)&#123;</div><div class="line">                    <span class="keyword">case</span> SCROLL_STATE_FLING:</div><div class="line">                        Picasso.with(GlideTest.<span class="keyword">this</span>).pauseTag(<span class="string">"item"</span>);</div><div class="line">                        <span class="keyword">break</span>;</div><div class="line">                    <span class="keyword">case</span> SCROLL_STATE_IDLE:</div><div class="line">                        Picasso.with(GlideTest.<span class="keyword">this</span>).resumeTag(<span class="string">"item"</span>);</div><div class="line">                        <span class="keyword">break</span>;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onScroll</span><span class="params">(AbsListView view, <span class="keyword">int</span> firstVisibleItem, <span class="keyword">int</span> visibleItemCount, <span class="keyword">int</span> totalItemCount)</span> </span>&#123;</div><div class="line"></div><div class="line">            &#125;</div><div class="line">        &#125;);</div></pre></td></tr></table></figure>
-</li>
-<li><p>fit方法<br>在源码中这个方法只是将deferred的值改为true，而这个值为true的意义是使图片根据ImageView的大小充满整个view，不考虑比例，可能导致图片被拉伸或缩小。要注意的是，<strong>fit方法只能用在imageView上，且应用fit的imageView不能为wrapcontent，</strong>很好理解，毕竟fit要测量好宽高才能加载图片。<br>上面adapter中的使用就用到了fit方法</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Picasso.with(parent.getContext())</div><div class="line">                  .load(paths.get(position)).fit().tag(<span class="string">"item"</span>).into(holder.img);</div></pre></td></tr></table></figure>
-<p>直观的看一下不使用fit和使用fit的区别</p>
-<p><img src="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3z6ofbj30r00zb1kx.jpg" alt="不使用fit">          <img src="http://ww1.sinaimg.cn/thumbnail/006aoiFpgy1fi6d3hbpuej30tz10cu0x.jpg" alt="使用fit"></p>
-</li>
-<li><p>resizeDimen方法<br>作用就是根据传入的两个参数设置图片的宽高，这里两个参数是两个资源id，与之有关联的是resize方法，可以直接传入两个int值进行设置，resizeDimen方法内部最后也是调用了resize方法。使用方法还是跟在load方法之后调用即可，但是需要注意一点，<strong>该方法和resize方法都不能与fit方法一起使用，否则会抛出错误导致程序崩溃</strong>。<br>这个不难理解，fit方法使图片自己适应到整个ImageView的宽高，resize和resizeDimen又是告诉Picasso你想要显示一个具体宽高的图片，这种前后矛盾的命令，不要说程序会崩溃了，换你你也崩溃。</p>
-</li>
-<li><p>centerInside&amp;centerCrop方法<br>熟悉ImageView方法的同学应该会觉得眼熟，这两个方法在ImageView中也有，在这里的作用和在ImageView中的作用差别不大，centerCrop方法以将控件填满为最终目的，会调整图片的尺寸，使宽高都扩展到足以触碰到ImageView的边界，然后将边界外的部分裁剪掉，所以图片的显示是不完全的；centerInside则是以把图片完整的放到控件内为目的，如果宽高比控件大，则缩放至刚好可以放在控件内的程度，比控件小就直接显示。<br><strong>这两个方法是必须跟在拿到具体宽高的方法后的，即必须跟在resize的两个方法或fit方法后，不然会抛异常。</strong></p>
-</li>
-<li><p>onlyScaleDown方法<br>设置在只有原始图片比目标size大的时候才调用resize方法，即<strong>此方法只能在resize方法调用后调用。</strong></p>
-</li>
-<li><p>rotate方法<br>设置图片旋转，有两个重载方法，一个传入一个旋转角度的float值degree，另一个传入degree和一个旋转中心点的x和y坐标。</p>
-</li>
-<li><p>priority方法<br>传入priority枚举类的对象，设定当前请求的优先级，优先级高的先请求。</p>
-</li>
-<li><p>transform方法<br>传入一个自定义Transformation对象，可以在load之后、into之前对图片做很多转换处理，能想到的需求比如设置圆角图片、高斯模糊等都可以通过传入对应的Transformation实现。</p>
-</li>
-<li><p>skipMemoryCache方法<br>跳过内存缓存，内部调用了memoryPolicy方法，作用是不再让Picasso将请求到的图片缓存到内存，而是直接缓存到磁盘上。</p>
-</li>
-<li><p>networkPolicy方法<br>可以理解为设置网络策略的方法，参数传入枚举NetworkPolicy的值，枚举类型有三个:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/** Skips checking the disk cache and forces loading through the network. */</span></div><div class="line">NO_CACHE(<span class="number">1</span> &lt;&lt; <span class="number">0</span>),</div><div class="line"></div><div class="line"><span class="comment">/**</span></div><div class="line"> * Skips storing the result into the disk cache.</div><div class="line"> * &lt;p&gt;</div><div class="line"> * &lt;em&gt;Note&lt;/em&gt;: At this time this is only supported if you are using OkHttp.</div><div class="line"> */</div><div class="line">NO_STORE(<span class="number">1</span> &lt;&lt; <span class="number">1</span>),</div><div class="line"></div><div class="line"><span class="comment">/** Forces the request through the disk cache only, skipping network. */</span></div><div class="line">OFFLINE(<span class="number">1</span> &lt;&lt; <span class="number">2</span>);</div></pre></td></tr></table></figure>
-<p>NO_CACHE表示处理请求的时候跳过磁盘缓存，即不管磁盘中有没有这次请求的缓存，都会从网络上重新请求一个下来；<br>NO_STORE表示请求成功后，不将请求结果缓存到磁盘中，但这个<strong>只对okhttp有效</strong>；<br>OFFLINE表示离线状态，不管磁盘中有没有缓存，设置这个状态后，都不会再从网络请求数据，而是直接从缓存中获取结果，不管缓存中能否获取到结果。</p>
-</li>
-<li><p>fetch()方法<br>用来预加载一张图片，可以在获取到ImageView或者target之前就将图片缓存下来。它还有一个重载方法是有一个callback参数，可以用来回调，然而这个 callback的回调方法是没有参数的，大概只是想用来告诉你这个请求是请求成功了还是失败了吧。。。</p>
+<li>corePoolSize ：线程池的核心线程数</li>
+<li>maximumPoolSize ：线程池允许的最大线程数</li>
+<li>keepAliveTime：线程的保活时间。这个保活时间有一个前提，它针对的是<strong>超出corePoolSize的空闲线程</strong>，也就是说，只有corePoolSize条线程之外的空闲线程，如果超过keepAliveTime的时间没有任务运行，就会被销毁，<strong>这个参数主要应用在cache线程池中</strong></li>
+<li>unit：表示keepAliveTime的时间单位</li>
+<li>workQueue：任务队列，主要用来存储已经提交但还未执行的任务，不同线程池的排队策略不一样</li>
+<li>threadFactory：线程工厂，用来创建线程池中的线程，通常采用默认的就好</li>
+<li>handler：通常叫做拒绝策略，1、在线程池已经关闭的情况下 2、任务太多导致最大线程数和任务队列已经饱和，无法再接收新的任务 。在上面两种情况下，只要满足其中一种时，在使用execute()来提交新的任务时将会拒绝，而默认的拒绝策略是抛一个RejectedExecutionException异常</li>
+</ul>
+<p>ThreadPoolExecutor对象构造好后，便可以向线程池提交任务，线程提交的方法有execute和submit，这里先说execute方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (command == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        </div><div class="line">        <span class="keyword">int</span> c = ctl.get();</div><div class="line">        <span class="keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;</div><div class="line">            <span class="keyword">if</span> (addWorker(command, <span class="keyword">true</span>))</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            c = ctl.get();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</div><div class="line">            <span class="keyword">int</span> recheck = ctl.get();</div><div class="line">            <span class="keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))</div><div class="line">                reject(command);</div><div class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (workerCountOf(recheck) == <span class="number">0</span>)</div><div class="line">                addWorker(<span class="keyword">null</span>, <span class="keyword">false</span>);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="keyword">false</span>))</div><div class="line">            reject(command);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>源码上这个方法内有一坨注释，实际上ThreadPoolExecutor的execute方法的执行策略已经在那堆注释里说清楚了，不过这里我们先把注释去掉，自己从源码上看出到底是什么策略。</p>
+<p>首先，在对传入的runnable对象进行了一次判空之后，调用了ctl的get方法，ctl是一个AutomicInteger类对象，AutomicInteger是一个提供原子操作的Integer的类，也就是说它本身是线程安全的。这个变量虽然名字起得我不是很懂，但是却是线程池中很重要的一个变量，我们看一下这个变量的声明以及与这个变量相关的一些代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> AtomicInteger ctl = <span class="keyword">new</span> AtomicInteger(ctlOf(RUNNING, <span class="number">0</span>));</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> COUNT_BITS = Integer.SIZE - <span class="number">3</span>;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> CAPACITY   = (<span class="number">1</span> &lt;&lt; COUNT_BITS) - <span class="number">1</span>;</div><div class="line"></div><div class="line"><span class="comment">// runState is stored in the high-order bits</span></div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> RUNNING    = -<span class="number">1</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SHUTDOWN   =  <span class="number">0</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STOP       =  <span class="number">1</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TIDYING    =  <span class="number">2</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TERMINATED =  <span class="number">3</span> &lt;&lt; COUNT_BITS;</div><div class="line"></div><div class="line"><span class="comment">// Packing and unpacking ctl</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">runStateOf</span><span class="params">(<span class="keyword">int</span> c)</span>     </span>&#123; <span class="keyword">return</span> c &amp; ~CAPACITY; &#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">workerCountOf</span><span class="params">(<span class="keyword">int</span> c)</span>  </span>&#123; <span class="keyword">return</span> c &amp; CAPACITY; &#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">ctlOf</span><span class="params">(<span class="keyword">int</span> rs, <span class="keyword">int</span> wc)</span> </span>&#123; <span class="keyword">return</span> rs | wc; &#125;</div></pre></td></tr></table></figure>
+<p>如果要彻底看懂上面的代码，我们还需要补一下Java基础中的位运算符和移位运算符，上面这段代码中用到的位运算符有&amp;（与）、|（或）和~（非），用到的移位运算符有&lt;&lt;（左移运算符）、&gt;&gt;（右移运算符）。</p>
+<ul>
+<li>&amp;运算：两个二进制数字对应位相与，只有同为1的位才得1，其余情况的位为0</li>
+<li>|运算：两个二进制数字对应位相或，只要有一位为1，则最后得到的数对应的位就为1</li>
+<li>~运算：对一个二进制数进行非运算，则原先是1的位变为0，原先是0的位变为1</li>
+<li>&lt;&lt;运算：x&lt;&lt;num，表示x数字所表示的二进制数字整体左移num位，右边空出的位置由0补足，注意这种移位运算是有限制的，比如上面的代码中做移位运算的是int值，所以转换为二进制之后只有32位，如果有为1的位左移到了第32位，则会变成符号位，使整个数字变成负数，而移出32位之外的位也就是移出去了，不会再作为这个数字的一部分进行位运算</li>
+<li><blockquote>
+<blockquote>
+<p>运算：x&gt;&gt;num，表示x数字的二进制数字整体右移num位，移出位的删除，左边空出的位置分两种情况，如果数字本身是正数，则用0补足，如果是负数，则用1补足</p>
+</blockquote>
+</blockquote>
 </li>
 </ul>
-<p>以上的方法基本涵盖了Picasso的各种用法，下篇会从源码上对Picasso进行分析。</p>
+<p>了解了这一块基础知识后，再来看上面的代码，首先Integer.SIZE获取的是int值的大小，也就是32位，所以COUNT_BITS也就是29，CAPACITY使用了左移运算，对1的二进制左移29后减1，过程如下：</p>
+<blockquote>
+<p>00000000000000000000000000000001<br>||左移29位后<br>00100000000000000000000000000000<br>||减1<br>00011111111111111111111111111111（CAPACITY值）</p>
+</blockquote>
+<p>可以看到，CAPACITY最终是一个取低29位为1的二进制数，再看下面，分别是对-1、0、1、2、3五个数进行了左移29位的运算，得到了RUNNING\SHUTDOWN\STOP\TIDYING\TERMINATED五个表示运行状态的值，可以看到这五个与运行状态有关的值的后29位都是0，差异都在高3位上。</p>
+<p>再看后面的三个方法，runStateOf方法传入一个int值，然后返回该值与CAPACITY的非值相与的结果。CAPACITY前面已经运算出来，是低29位为1的int类型二进制数，所以CAPACITY的非值就是高3位为1、低29位为0的二进制数，所以传入的int值c与CAPACITY的非值相与，最终会得到c值的高3位的值，对应前面分析的五个对应运行状态的值不难发现，高三位确实是这个int值用来存储运行状态的，所以这个方法自然可以返回一个用来表示运行状态的值。</p>
+<p>同理，workerCountOf方法也是传入一个int值c，但是返回的是c与CAPACITY值直接相与的结果，也就是返回c值低29位的值，根据方法名不难判断，c值低29位是用来存储线程数量的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">runStateOf</span><span class="params">(<span class="keyword">int</span> c)</span>     </span>&#123; <span class="keyword">return</span> c &amp; ~CAPACITY; &#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">workerCountOf</span><span class="params">(<span class="keyword">int</span> c)</span>  </span>&#123; <span class="keyword">return</span> c &amp; CAPACITY; &#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">ctlOf</span><span class="params">(<span class="keyword">int</span> rs, <span class="keyword">int</span> wc)</span> </span>&#123; <span class="keyword">return</span> rs | wc; &#125;</div></pre></td></tr></table></figure>
+<p>我们看到还有一个ctlOf方法，传入两个int值相或，这个方法是干嘛的呢？回头看ctl的定义处，调用过这个方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> AtomicInteger ctl = <span class="keyword">new</span> AtomicInteger(ctlOf(RUNNING, <span class="number">0</span>));</div></pre></td></tr></table></figure>
+<p>作为原子变量的初始化的参数，该方法传入了RUNNING常量和0，RUNNING是表示运行状态的，那么很明显，0就是表示初始化时工作线程的数量只有0条，那么这个方法的作用也就是将运行状态和工作线程数量合到一个int值中，前3位存储运行状态，后29位存储线程数量，这就是ctl这个变量精妙的设计了。</p>
+<p>线程池的运行状态可以先记住三个：</p>
+<ul>
+<li>RUNNING状态：线程池正常运行，可以接受新的任务并处理队列中的任务；</li>
+<li>SHUTDOWN状态：不再接受新的任务，但是会执行队列中的任务；</li>
+<li>STOP状态：不再接受新任务，不处理队列中的任务</li>
+</ul>
+<p>了解了上面的内容之后，再回头看execute方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (command == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        </div><div class="line">        <span class="keyword">int</span> c = ctl.get();</div><div class="line">        <span class="keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;</div><div class="line">            <span class="keyword">if</span> (addWorker(command, <span class="keyword">true</span>))</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            c = ctl.get();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</div><div class="line">            <span class="keyword">int</span> recheck = ctl.get();</div><div class="line">            <span class="keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))</div><div class="line">                reject(command);</div><div class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (workerCountOf(recheck) == <span class="number">0</span>)</div><div class="line">                addWorker(<span class="keyword">null</span>, <span class="keyword">false</span>);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="keyword">false</span>))</div><div class="line">            reject(command);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>这里我们先假设是第一次调用线程池的execute方法，所以此时ctl的get方法返回的就是一开始通过ctlOf(RUNNING, 0)初始化的AutoMaticInteger值赋值给c，后面做了一个if判断，通过workerCountOf方法获取到c中存储的工作线程数，这里当然是0，然后与初始化ThreadPoolExecutor时传入的corePoolSize比较大小，如果小于corePoolSize则进行下一层判断，判断时调用addWorker方法，传入execute的参数Runnable对象和一个波尔值。我们看下addWorker方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">addWorker</span><span class="params">(Runnable firstTask, <span class="keyword">boolean</span> core)</span> </span>&#123;</div><div class="line">        retry:</div><div class="line">        <span class="keyword">for</span> (;;) &#123;</div><div class="line">            <span class="keyword">int</span> c = ctl.get();</div><div class="line">            <span class="keyword">int</span> rs = runStateOf(c);</div><div class="line"></div><div class="line">            <span class="comment">// Check if queue empty only if necessary.</span></div><div class="line">            <span class="keyword">if</span> (rs &gt;= SHUTDOWN &amp;&amp;</div><div class="line">                ! (rs == SHUTDOWN &amp;&amp;</div><div class="line">                   firstTask == <span class="keyword">null</span> &amp;&amp;</div><div class="line">                   ! workQueue.isEmpty()))</div><div class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line"></div><div class="line">            <span class="keyword">for</span> (;;) &#123;</div><div class="line">                <span class="keyword">int</span> wc = workerCountOf(c);</div><div class="line">                <span class="keyword">if</span> (wc &gt;= CAPACITY ||</div><div class="line">                    wc &gt;= (core ? corePoolSize : maximumPoolSize))</div><div class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">                <span class="keyword">if</span> (compareAndIncrementWorkerCount(c))</div><div class="line">                    <span class="keyword">break</span> retry;</div><div class="line">                c = ctl.get();  <span class="comment">// Re-read ctl</span></div><div class="line">                <span class="keyword">if</span> (runStateOf(c) != rs)</div><div class="line">                    <span class="keyword">continue</span> retry;</div><div class="line">                <span class="comment">// else CAS failed due to workerCount change; retry inner loop</span></div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">boolean</span> workerStarted = <span class="keyword">false</span>;</div><div class="line">        <span class="keyword">boolean</span> workerAdded = <span class="keyword">false</span>;</div><div class="line">        Worker w = <span class="keyword">null</span>;</div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            w = <span class="keyword">new</span> Worker(firstTask);</div><div class="line">            <span class="keyword">final</span> Thread t = w.thread;</div><div class="line">            <span class="keyword">if</span> (t != <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="keyword">final</span> ReentrantLock mainLock = <span class="keyword">this</span>.mainLock;</div><div class="line">                mainLock.lock();</div><div class="line">                <span class="keyword">try</span> &#123;</div><div class="line">                    <span class="comment">// Recheck while holding lock.</span></div><div class="line">                    <span class="comment">// Back out on ThreadFactory failure or if</span></div><div class="line">                    <span class="comment">// shut down before lock acquired.</span></div><div class="line">                    <span class="keyword">int</span> rs = runStateOf(ctl.get());</div><div class="line"></div><div class="line">                    <span class="keyword">if</span> (rs &lt; SHUTDOWN ||</div><div class="line">                        (rs == SHUTDOWN &amp;&amp; firstTask == <span class="keyword">null</span>)) &#123;</div><div class="line">                        <span class="keyword">if</span> (t.isAlive()) <span class="comment">// precheck that t is startable</span></div><div class="line">                            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalThreadStateException();</div><div class="line">                        workers.add(w);</div><div class="line">                        <span class="keyword">int</span> s = workers.size();</div><div class="line">                        <span class="keyword">if</span> (s &gt; largestPoolSize)</div><div class="line">                            largestPoolSize = s;</div><div class="line">                        workerAdded = <span class="keyword">true</span>;</div><div class="line">                    &#125;</div><div class="line">                &#125; <span class="keyword">finally</span> &#123;</div><div class="line">                    mainLock.unlock();</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">if</span> (workerAdded) &#123;</div><div class="line">                    t.start();</div><div class="line">                    workerStarted = <span class="keyword">true</span>;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">finally</span> &#123;</div><div class="line">            <span class="keyword">if</span> (! workerStarted)</div><div class="line">                addWorkerFailed(w);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> workerStarted;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>这个方法是线程池的核心方法，也是一个相当难懂的方法，因为没有可以省略的代码所以不得不整个一坨贴过来，接下来我们将这个方法大卸八块，一部分一部分的解析这个方法。</p>
+<p>方法中首先是一个被标记为retry的代码块，代码块中是一个没有限制语句的for循环，第一层for循环中，首先通过原子整数变量ctl的get方法获取到原子整数，然后通过runStateOf方法获取到这个整数值高三位存储的线程池运行状态值rs，接下来进行了一个if判断：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (rs &gt;= SHUTDOWN &amp;&amp;! (rs == SHUTDOWN &amp;&amp;firstTask == <span class="keyword">null</span> &amp;&amp;! workQueue.isEmpty()))</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div></pre></td></tr></table></figure>
+<p>这个if语句包含的逻辑判断比较复杂，也是通过这个if语句实现了不能向线程池中添加线程的策略。将整个if语句拆开来看可以分为下面几种情况：</p>
+<ul>
+<li>rs&gt;=SHUTDOWN、且rs！=SHUTDOWN时会直接返回false，即<strong>rs&gt;SHUTDOWN时，也就是线程池状态为STOP\TIDYING\TERMINATED中的任意一个值都会直接在这里返回false</strong>；</li>
+<li><strong>rs==SHUTDOWN、且firstTask！=null时直接返回false</strong>，firstTask是调用execute方法时传入的Runnable对象，就是说如果线程池为SHUTDOWN状态，此时直接调用execute方法向线程池添加<strong>不为null</strong>的Runnable对象会直接返回false；</li>
+<li><strong>rs==SHUTDOWN、且firstTask为null、且workQueue为empty时直接返回false</strong>，workQueue是任务队列，就是说，如果任务队列中没有还未执行的任务，此时由execute方法传入<strong>为null</strong>的Runnable对象firstTask会直接返回false，但是反过来看，也就是说如果workQueue不为空、rs为SHUTDOWN，此时传入为null的firstTask是不会被返回false的，这是为什么呢？后面的源码会给出解答。</li>
+</ul>
+<p>总结来说，线程池运行状态&gt;SHUTDOWN、线程池运行状态为SHUTDOWN且execute进来的Runnable对象不为空、线程池运行状态为SHUTDOWN且execute进来的Runnable为空但任务队列为空这三种情况下该方法会直接返回false，不会进行接下来的操作。</p>
+<p>反过来，如果线程池状态为RUNNING，或者线程池状态为SHUTDOWN但传入的firstTask为空且任务队列不为空时，才能运行到这个if代码段的后面的代码。</p>
+<p>那么假设我们已经运行过了前面的if判断，接下来又是一个没有限制条件的for循环：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> (;;) &#123;</div><div class="line">                <span class="keyword">int</span> wc = workerCountOf(c);</div><div class="line">                <span class="keyword">if</span> (wc &gt;= CAPACITY ||</div><div class="line">                    wc &gt;= (core ? corePoolSize : maximumPoolSize))</div><div class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">                <span class="keyword">if</span> (compareAndIncrementWorkerCount(c))</div><div class="line">                    <span class="keyword">break</span> retry;</div><div class="line">                c = ctl.get();  <span class="comment">// Re-read ctl</span></div><div class="line">                <span class="keyword">if</span> (runStateOf(c) != rs)</div><div class="line">                    <span class="keyword">continue</span> retry;</div><div class="line">                <span class="comment">// else CAS failed due to workerCount change; retry inner loop</span></div><div class="line">            &#125;</div></pre></td></tr></table></figure>
+<p>在这个第二层for循环里，首先通过原子整数获取到了存储在低29位的工作线程数wc，然后又进行了一个if判断，判断语句是一个或运算连接的两个判断条件：</p>
+<ul>
+<li>wc &gt;= CAPACITY</li>
+<li>wc &gt;= (core ? corePoolSize : maximumPoolSize)</li>
+</ul>
+<p>由于是或运算符，两个条件只要有一个为真即会进入if语句，然后被返回false，我们看一下这两个条件。</p>
+<p>CAPACITY我们前面已经得到，是一个低29位全部为1的二进制int值，由于低29位用来存储线程数量，其实这里CAPACITY也就代表着存储线程数量的最大值，也就是说，如果获取到的存储的线程数量大于等于存储线程数的最大值就直接返回false，这里好理解，作为一个存储容器自然要有一个自己所能存储的最大值；</p>
+<p>第二个条件用到了core，core是传入addWorker方法的第二个参数，在execute方法中，第一次用到addWorker方法时传入了true：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;</div><div class="line">            <span class="keyword">if</span> (addWorker(command, <span class="keyword">true</span>))</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            c = ctl.get();</div><div class="line">        &#125;</div></pre></td></tr></table></figure>
+<p>而后面用到这个方法的时候传入了false：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</div><div class="line">            <span class="keyword">int</span> recheck = ctl.get();</div><div class="line">            <span class="keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))</div><div class="line">                reject(command);</div><div class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (workerCountOf(recheck) == <span class="number">0</span>)</div><div class="line">                addWorker(<span class="keyword">null</span>, <span class="keyword">false</span>);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="keyword">false</span>))</div><div class="line">            reject(command);</div></pre></td></tr></table></figure>
+<p>结合core和corePoolSize的命名，不难看出这两个量之间的联系，事实上，core这个波尔值被用来选择当前是使用corePoolSize还是maximumPoolSize来与当前存储的工作线程数量wc进行比较，如果传入true，则wc与corePoolSize进行比较，否则与maximumPoolSize进行比较，而如果wc大于后面根据core取到的值 ，则直接返回false。</p>
+<p>这里由于我们是假设在第一次使用线程池的execute方法，所以此时工作线程的数量为0，execute方法通过workerCountOf方法获取到的数量小于corePoolSize，所以可以跳过这个if语句运行到下面语句：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (compareAndIncrementWorkerCount(c))</div><div class="line">    <span class="keyword">break</span> retry;</div></pre></td></tr></table></figure>
+<p>我们看一下compareAndIncrementWorkerCount方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">compareAndIncrementWorkerCount</span><span class="params">(<span class="keyword">int</span> expect)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> ctl.compareAndSet(expect, expect + <span class="number">1</span>);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>很简单的一个方法，只是调用了原子整数变量ctl的compareAndSet方法，并传入当前的ctl值和加一后的ctl值。这个方法是做什么的呢？简单来说，这个方法调用的是原子整数类内部的Unsafe对象的compareAndSwapInt方法，这个方法是一个CAS方法，即“比较并转换”方法，这是一个直接使用CPU进行的原子操作方法，最终达到的效果就是使当前compareAndSet方法中传入的第一个参数值线程安全的变为传入的第二个参数的值，这里也就是使原来的值加一，放到上下文中来说也就是使工作线程数加一，然后返回操作的结果（一个波尔值），执行成功后就返回true，也就执行到if判断内的语句中，执行break retry语句，跳出整个由retry标记的for循环， 如果第一个值没有更新成第二个值，则返回false。</p>
+<p>而如果compareAndIncrementWorkerCount方法返回false，则首先会再通过ctl的get方法读取一次ctl的值，然后获取ctl中现在保存的线程池运行状态，如果和之前在最外层循环刚开始的时候获取的运行状态不一样，则重新开始最外层的循环，否则就重新开始第二层for循环，即用来对工作线程数量加一的循环。</p>
+<p>总的来说，addWorker方法中的两层for循环，<strong>第一层中用来对当前线程池的运行状态进行判断</strong>，运行状态不符合条件则直接返回false，运行到第二层for循环时说明当前线程池是RUNNING状态或者为SHUTDOWN但可以添加为null的Runnable的状态，所以<strong>第二层for循环就是用来为存储的工作线程数量加一</strong>。</p>
+<p>//未完</p>
 
       
 
@@ -276,15 +312,15 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Picasso</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">图片加载框架</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">并发</a>
         		</li>
       		
 		</ul>
@@ -351,7 +387,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/08/03/Picasso-1/" alt="微信分享二维码">
+      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/08/23/threadpool2/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -365,18 +401,9 @@
   
 <nav id="article-nav">
   
-    <a href="/2017/08/09/life1/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          吐槽及后续安排
-        
-      </div>
-    </a>
   
-  
-    <a href="/2017/07/25/EventBus-third/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">EventBus使用与分析三（源码分析之注册）</div>
+    <a href="/2017/08/21/TODOLIST/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">TODOLIST</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -395,6 +422,19 @@
             </div>
         </div>
         
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#回到ThreadPoolExecutor"><span class="toc-number">1.</span> <span class="toc-text">回到ThreadPoolExecutor</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
         
     </div>
 </aside>

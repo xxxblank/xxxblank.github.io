@@ -164,6 +164,281 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-threadpool2" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/08/23/threadpool2/">线程池源码分析一</a>
+    </h1>
+  
+
+        
+        <a href="/2017/08/23/threadpool2/" class="archive-article-date">
+  	<time datetime="2017-08-23T09:30:50.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-23</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="回到ThreadPoolExecutor"><a href="#回到ThreadPoolExecutor" class="headerlink" title="回到ThreadPoolExecutor"></a>回到ThreadPoolExecutor</h2><p>正如先前看到的，ThreadPoolExecutor有四个构造函数，其中最简单的一个都有五个参数，然而它们最终调用的其实都是七个参数的那个构造函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize,</span></span></div><div class="line">                              <span class="keyword">int</span> maximumPoolSize,</div><div class="line">                              <span class="keyword">long</span> keepAliveTime,</div><div class="line">                              TimeUnit unit,</div><div class="line">                              BlockingQueue&lt;Runnable&gt; workQueue,</div><div class="line">                              ThreadFactory threadFactory,</div><div class="line">                              RejectedExecutionHandler handler) &#123;</div><div class="line">        <span class="keyword">if</span> (corePoolSize &lt; <span class="number">0</span> ||</div><div class="line">            maximumPoolSize &lt;= <span class="number">0</span> ||</div><div class="line">            maximumPoolSize &lt; corePoolSize ||</div><div class="line">            keepAliveTime &lt; <span class="number">0</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</div><div class="line">        <span class="keyword">if</span> (workQueue == <span class="keyword">null</span> || threadFactory == <span class="keyword">null</span> || handler == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        <span class="keyword">this</span>.corePoolSize = corePoolSize;</div><div class="line">        <span class="keyword">this</span>.maximumPoolSize = maximumPoolSize;</div><div class="line">        <span class="keyword">this</span>.workQueue = workQueue;</div><div class="line">        <span class="keyword">this</span>.keepAliveTime = unit.toNanos(keepAliveTime);</div><div class="line">        <span class="keyword">this</span>.threadFactory = threadFactory;</div><div class="line">        <span class="keyword">this</span>.handler = handler;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>构造函数做的事很简单，对各个参数根据参数传入的值进行赋值，每个参数的意义如下：</p>
+<ul>
+<li>corePoolSize ：线程池的核心线程数</li>
+<li>maximumPoolSize ：线程池允许的最大线程数</li>
+<li>keepAliveTime：线程的保活时间。这个保活时间有一个前提，它针对的是<strong>超出corePoolSize的空闲线程</strong>，也就是说，只有corePoolSize条线程之外的空闲线程，如果超过keepAliveTime的时间没有任务运行，就会被销毁，<strong>这个参数主要应用在cache线程池中</strong></li>
+<li>unit：表示keepAliveTime的时间单位</li>
+<li>workQueue：任务队列，主要用来存储已经提交但还未执行的任务，不同线程池的排队策略不一样</li>
+<li>threadFactory：线程工厂，用来创建线程池中的线程，通常采用默认的就好</li>
+<li>handler：通常叫做拒绝策略，1、在线程池已经关闭的情况下 2、任务太多导致最大线程数和任务队列已经饱和，无法再接收新的任务 。在上面两种情况下，只要满足其中一种时，在使用execute()来提交新的任务时将会拒绝，而默认的拒绝策略是抛一个RejectedExecutionException异常</li>
+</ul>
+<p>ThreadPoolExecutor对象构造好后，便可以向线程池提交任务，线程提交的方法有execute和submit，这里先说execute方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (command == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        </div><div class="line">        <span class="keyword">int</span> c = ctl.get();</div><div class="line">        <span class="keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;</div><div class="line">            <span class="keyword">if</span> (addWorker(command, <span class="keyword">true</span>))</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            c = ctl.get();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</div><div class="line">            <span class="keyword">int</span> recheck = ctl.get();</div><div class="line">            <span class="keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))</div><div class="line">                reject(command);</div><div class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (workerCountOf(recheck) == <span class="number">0</span>)</div><div class="line">                addWorker(<span class="keyword">null</span>, <span class="keyword">false</span>);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="keyword">false</span>))</div><div class="line">            reject(command);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>源码上这个方法内有一坨注释，实际上ThreadPoolExecutor的execute方法的执行策略已经在那堆注释里说清楚了，不过这里我们先把注释去掉，自己从源码上看出到底是什么策略。</p>
+<p>首先，在对传入的runnable对象进行了一次判空之后，调用了ctl的get方法，ctl是一个AutomicInteger类对象，AutomicInteger是一个提供原子操作的Integer的类，也就是说它本身是线程安全的。这个变量虽然名字起得我不是很懂，但是却是线程池中很重要的一个变量，我们看一下这个变量的声明以及与这个变量相关的一些代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> AtomicInteger ctl = <span class="keyword">new</span> AtomicInteger(ctlOf(RUNNING, <span class="number">0</span>));</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> COUNT_BITS = Integer.SIZE - <span class="number">3</span>;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> CAPACITY   = (<span class="number">1</span> &lt;&lt; COUNT_BITS) - <span class="number">1</span>;</div><div class="line"></div><div class="line"><span class="comment">// runState is stored in the high-order bits</span></div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> RUNNING    = -<span class="number">1</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SHUTDOWN   =  <span class="number">0</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STOP       =  <span class="number">1</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TIDYING    =  <span class="number">2</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TERMINATED =  <span class="number">3</span> &lt;&lt; COUNT_BITS;</div><div class="line"></div><div class="line"><span class="comment">// Packing and unpacking ctl</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">runStateOf</span><span class="params">(<span class="keyword">int</span> c)</span>     </span>&#123; <span class="keyword">return</span> c &amp; ~CAPACITY; &#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">workerCountOf</span><span class="params">(<span class="keyword">int</span> c)</span>  </span>&#123; <span class="keyword">return</span> c &amp; CAPACITY; &#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">ctlOf</span><span class="params">(<span class="keyword">int</span> rs, <span class="keyword">int</span> wc)</span> </span>&#123; <span class="keyword">return</span> rs | wc; &#125;</div></pre></td></tr></table></figure>
+<p>如果要彻底看懂上面的代码，我们还需要补一下Java基础中的位运算符和移位运算符，上面这段代码中用到的位运算符有&amp;（与）、|（或）和~（非），用到的移位运算符有&lt;&lt;（左移运算符）、&gt;&gt;（右移运算符）。</p>
+<ul>
+<li>&amp;运算：两个二进制数字对应位相与，只有同为1的位才得1，其余情况的位为0</li>
+<li>|运算：两个二进制数字对应位相或，只要有一位为1，则最后得到的数对应的位就为1</li>
+<li>~运算：对一个二进制数进行非运算，则原先是1的位变为0，原先是0的位变为1</li>
+<li>&lt;&lt;运算：x&lt;&lt;num，表示x数字所表示的二进制数字整体左移num位，右边空出的位置由0补足，注意这种移位运算是有限制的，比如上面的代码中做移位运算的是int值，所以转换为二进制之后只有32位，如果有为1的位左移到了第32位，则会变成符号位，使整个数字变成负数，而移出32位之外的位也就是移出去了，不会再作为这个数字的一部分进行位运算</li>
+<li><blockquote>
+<blockquote>
+<p>运算：x&gt;&gt;num，表示x数字的二进制数字整体右移num位，移出位的删除，左边空出的位置分两种情况，如果数字本身是正数，则用0补足，如果是负数，则用1补足</p>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<p>了解了这一块基础知识后，再来看上面的代码，首先Integer.SIZE获取的是int值的大小，也就是32位，所以COUNT_BITS也就是29，CAPACITY使用了左移运算，对1的二进制左移29后减1，过程如下：</p>
+<blockquote>
+<p>00000000000000000000000000000001<br>||左移29位后<br>00100000000000000000000000000000<br>||减1<br>00011111111111111111111111111111（CAPACITY值）</p>
+</blockquote>
+<p>可以看到，CAPACITY最终是一个取低29位为1的二进制数，再看下面，分别是对-1、0、1、2、3五个数进行了左移29位的运算，得到了RUNNING\SHUTDOWN\STOP\TIDYING\TERMINATED五个表示运行状态的值，可以看到这五个与运行状态有关的值的后29位都是0，差异都在高3位上。</p>
+<p>再看后面的三个方法，runStateOf方法传入一个int值，然后返回该值与CAPACITY的非值相与的结果。CAPACITY前面已经运算出来，是低29位为1的int类型二进制数，所以CAPACITY的非值就是高3位为1、低29位为0的二进制数，所以传入的int值c与CAPACITY的非值相与，最终会得到c值的高3位的值，对应前面分析的五个对应运行状态的值不难发现，高三位确实是这个int值用来存储运行状态的，所以这个方法自然可以返回一个用来表示运行状态的值。</p>
+<p>同理，workerCountOf方法也是传入一个int值c，但是返回的是c与CAPACITY值直接相与的结果，也就是返回c值低29位的值，根据方法名不难判断，c值低29位是用来存储线程数量的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">runStateOf</span><span class="params">(<span class="keyword">int</span> c)</span>     </span>&#123; <span class="keyword">return</span> c &amp; ~CAPACITY; &#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">workerCountOf</span><span class="params">(<span class="keyword">int</span> c)</span>  </span>&#123; <span class="keyword">return</span> c &amp; CAPACITY; &#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">ctlOf</span><span class="params">(<span class="keyword">int</span> rs, <span class="keyword">int</span> wc)</span> </span>&#123; <span class="keyword">return</span> rs | wc; &#125;</div></pre></td></tr></table></figure>
+<p>我们看到还有一个ctlOf方法，传入两个int值相或，这个方法是干嘛的呢？回头看ctl的定义处，调用过这个方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> AtomicInteger ctl = <span class="keyword">new</span> AtomicInteger(ctlOf(RUNNING, <span class="number">0</span>));</div></pre></td></tr></table></figure>
+<p>作为原子变量的初始化的参数，该方法传入了RUNNING常量和0，RUNNING是表示运行状态的，那么很明显，0就是表示初始化时工作线程的数量只有0条，那么这个方法的作用也就是将运行状态和工作线程数量合到一个int值中，前3位存储运行状态，后29位存储线程数量，这就是ctl这个变量精妙的设计了。</p>
+<p>线程池的运行状态可以先记住三个：</p>
+<ul>
+<li>RUNNING状态：线程池正常运行，可以接受新的任务并处理队列中的任务；</li>
+<li>SHUTDOWN状态：不再接受新的任务，但是会执行队列中的任务；</li>
+<li>STOP状态：不再接受新任务，不处理队列中的任务</li>
+</ul>
+<p>了解了上面的内容之后，再回头看execute方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (command == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        </div><div class="line">        <span class="keyword">int</span> c = ctl.get();</div><div class="line">        <span class="keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;</div><div class="line">            <span class="keyword">if</span> (addWorker(command, <span class="keyword">true</span>))</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            c = ctl.get();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</div><div class="line">            <span class="keyword">int</span> recheck = ctl.get();</div><div class="line">            <span class="keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))</div><div class="line">                reject(command);</div><div class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (workerCountOf(recheck) == <span class="number">0</span>)</div><div class="line">                addWorker(<span class="keyword">null</span>, <span class="keyword">false</span>);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="keyword">false</span>))</div><div class="line">            reject(command);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>这里我们先假设是第一次调用线程池的execute方法，所以此时ctl的get方法返回的就是一开始通过ctlOf(RUNNING, 0)初始化的AutoMaticInteger值赋值给c，后面做了一个if判断，通过workerCountOf方法获取到c中存储的工作线程数，这里当然是0，然后与初始化ThreadPoolExecutor时传入的corePoolSize比较大小，如果小于corePoolSize则进行下一层判断，判断时调用addWorker方法，传入execute的参数Runnable对象和一个波尔值。我们看下addWorker方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">addWorker</span><span class="params">(Runnable firstTask, <span class="keyword">boolean</span> core)</span> </span>&#123;</div><div class="line">        retry:</div><div class="line">        <span class="keyword">for</span> (;;) &#123;</div><div class="line">            <span class="keyword">int</span> c = ctl.get();</div><div class="line">            <span class="keyword">int</span> rs = runStateOf(c);</div><div class="line"></div><div class="line">            <span class="comment">// Check if queue empty only if necessary.</span></div><div class="line">            <span class="keyword">if</span> (rs &gt;= SHUTDOWN &amp;&amp;</div><div class="line">                ! (rs == SHUTDOWN &amp;&amp;</div><div class="line">                   firstTask == <span class="keyword">null</span> &amp;&amp;</div><div class="line">                   ! workQueue.isEmpty()))</div><div class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line"></div><div class="line">            <span class="keyword">for</span> (;;) &#123;</div><div class="line">                <span class="keyword">int</span> wc = workerCountOf(c);</div><div class="line">                <span class="keyword">if</span> (wc &gt;= CAPACITY ||</div><div class="line">                    wc &gt;= (core ? corePoolSize : maximumPoolSize))</div><div class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">                <span class="keyword">if</span> (compareAndIncrementWorkerCount(c))</div><div class="line">                    <span class="keyword">break</span> retry;</div><div class="line">                c = ctl.get();  <span class="comment">// Re-read ctl</span></div><div class="line">                <span class="keyword">if</span> (runStateOf(c) != rs)</div><div class="line">                    <span class="keyword">continue</span> retry;</div><div class="line">                <span class="comment">// else CAS failed due to workerCount change; retry inner loop</span></div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">boolean</span> workerStarted = <span class="keyword">false</span>;</div><div class="line">        <span class="keyword">boolean</span> workerAdded = <span class="keyword">false</span>;</div><div class="line">        Worker w = <span class="keyword">null</span>;</div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            w = <span class="keyword">new</span> Worker(firstTask);</div><div class="line">            <span class="keyword">final</span> Thread t = w.thread;</div><div class="line">            <span class="keyword">if</span> (t != <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="keyword">final</span> ReentrantLock mainLock = <span class="keyword">this</span>.mainLock;</div><div class="line">                mainLock.lock();</div><div class="line">                <span class="keyword">try</span> &#123;</div><div class="line">                    <span class="comment">// Recheck while holding lock.</span></div><div class="line">                    <span class="comment">// Back out on ThreadFactory failure or if</span></div><div class="line">                    <span class="comment">// shut down before lock acquired.</span></div><div class="line">                    <span class="keyword">int</span> rs = runStateOf(ctl.get());</div><div class="line"></div><div class="line">                    <span class="keyword">if</span> (rs &lt; SHUTDOWN ||</div><div class="line">                        (rs == SHUTDOWN &amp;&amp; firstTask == <span class="keyword">null</span>)) &#123;</div><div class="line">                        <span class="keyword">if</span> (t.isAlive()) <span class="comment">// precheck that t is startable</span></div><div class="line">                            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalThreadStateException();</div><div class="line">                        workers.add(w);</div><div class="line">                        <span class="keyword">int</span> s = workers.size();</div><div class="line">                        <span class="keyword">if</span> (s &gt; largestPoolSize)</div><div class="line">                            largestPoolSize = s;</div><div class="line">                        workerAdded = <span class="keyword">true</span>;</div><div class="line">                    &#125;</div><div class="line">                &#125; <span class="keyword">finally</span> &#123;</div><div class="line">                    mainLock.unlock();</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">if</span> (workerAdded) &#123;</div><div class="line">                    t.start();</div><div class="line">                    workerStarted = <span class="keyword">true</span>;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">finally</span> &#123;</div><div class="line">            <span class="keyword">if</span> (! workerStarted)</div><div class="line">                addWorkerFailed(w);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> workerStarted;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>这个方法是线程池的核心方法，也是一个相当难懂的方法，因为没有可以省略的代码所以不得不整个一坨贴过来，接下来我们将这个方法大卸八块，一部分一部分的解析这个方法。</p>
+<p>方法中首先是一个被标记为retry的代码块，代码块中是一个没有限制语句的for循环，第一层for循环中，首先通过原子整数变量ctl的get方法获取到原子整数，然后通过runStateOf方法获取到这个整数值高三位存储的线程池运行状态值rs，接下来进行了一个if判断：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (rs &gt;= SHUTDOWN &amp;&amp;! (rs == SHUTDOWN &amp;&amp;firstTask == <span class="keyword">null</span> &amp;&amp;! workQueue.isEmpty()))</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div></pre></td></tr></table></figure>
+<p>这个if语句包含的逻辑判断比较复杂，也是通过这个if语句实现了不能向线程池中添加线程的策略。将整个if语句拆开来看可以分为下面几种情况：</p>
+<ul>
+<li>rs&gt;=SHUTDOWN、且rs！=SHUTDOWN时会直接返回false，即<strong>rs&gt;SHUTDOWN时，也就是线程池状态为STOP\TIDYING\TERMINATED中的任意一个值都会直接在这里返回false</strong>；</li>
+<li><strong>rs==SHUTDOWN、且firstTask！=null时直接返回false</strong>，firstTask是调用execute方法时传入的Runnable对象，就是说如果线程池为SHUTDOWN状态，此时直接调用execute方法向线程池添加<strong>不为null</strong>的Runnable对象会直接返回false；</li>
+<li><strong>rs==SHUTDOWN、且firstTask为null、且workQueue为empty时直接返回false</strong>，workQueue是任务队列，就是说，如果任务队列中没有还未执行的任务，此时由execute方法传入<strong>为null</strong>的Runnable对象firstTask会直接返回false，但是反过来看，也就是说如果workQueue不为空、rs为SHUTDOWN，此时传入为null的firstTask是不会被返回false的，这是为什么呢？后面的源码会给出解答。</li>
+</ul>
+<p>总结来说，线程池运行状态&gt;SHUTDOWN、线程池运行状态为SHUTDOWN且execute进来的Runnable对象不为空、线程池运行状态为SHUTDOWN且execute进来的Runnable为空但任务队列为空这三种情况下该方法会直接返回false，不会进行接下来的操作。</p>
+<p>反过来，如果线程池状态为RUNNING，或者线程池状态为SHUTDOWN但传入的firstTask为空且任务队列不为空时，才能运行到这个if代码段的后面的代码。</p>
+<p>那么假设我们已经运行过了前面的if判断，接下来又是一个没有限制条件的for循环：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> (;;) &#123;</div><div class="line">                <span class="keyword">int</span> wc = workerCountOf(c);</div><div class="line">                <span class="keyword">if</span> (wc &gt;= CAPACITY ||</div><div class="line">                    wc &gt;= (core ? corePoolSize : maximumPoolSize))</div><div class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">                <span class="keyword">if</span> (compareAndIncrementWorkerCount(c))</div><div class="line">                    <span class="keyword">break</span> retry;</div><div class="line">                c = ctl.get();  <span class="comment">// Re-read ctl</span></div><div class="line">                <span class="keyword">if</span> (runStateOf(c) != rs)</div><div class="line">                    <span class="keyword">continue</span> retry;</div><div class="line">                <span class="comment">// else CAS failed due to workerCount change; retry inner loop</span></div><div class="line">            &#125;</div></pre></td></tr></table></figure>
+<p>在这个第二层for循环里，首先通过原子整数获取到了存储在低29位的工作线程数wc，然后又进行了一个if判断，判断语句是一个或运算连接的两个判断条件：</p>
+<ul>
+<li>wc &gt;= CAPACITY</li>
+<li>wc &gt;= (core ? corePoolSize : maximumPoolSize)</li>
+</ul>
+<p>由于是或运算符，两个条件只要有一个为真即会进入if语句，然后被返回false，我们看一下这两个条件。</p>
+<p>CAPACITY我们前面已经得到，是一个低29位全部为1的二进制int值，由于低29位用来存储线程数量，其实这里CAPACITY也就代表着存储线程数量的最大值，也就是说，如果获取到的存储的线程数量大于等于存储线程数的最大值就直接返回false，这里好理解，作为一个存储容器自然要有一个自己所能存储的最大值；</p>
+<p>第二个条件用到了core，core是传入addWorker方法的第二个参数，在execute方法中，第一次用到addWorker方法时传入了true：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;</div><div class="line">            <span class="keyword">if</span> (addWorker(command, <span class="keyword">true</span>))</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            c = ctl.get();</div><div class="line">        &#125;</div></pre></td></tr></table></figure>
+<p>而后面用到这个方法的时候传入了false：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</div><div class="line">            <span class="keyword">int</span> recheck = ctl.get();</div><div class="line">            <span class="keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))</div><div class="line">                reject(command);</div><div class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (workerCountOf(recheck) == <span class="number">0</span>)</div><div class="line">                addWorker(<span class="keyword">null</span>, <span class="keyword">false</span>);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="keyword">false</span>))</div><div class="line">            reject(command);</div></pre></td></tr></table></figure>
+<p>结合core和corePoolSize的命名，不难看出这两个量之间的联系，事实上，core这个波尔值被用来选择当前是使用corePoolSize还是maximumPoolSize来与当前存储的工作线程数量wc进行比较，如果传入true，则wc与corePoolSize进行比较，否则与maximumPoolSize进行比较，而如果wc大于后面根据core取到的值 ，则直接返回false。</p>
+<p>这里由于我们是假设在第一次使用线程池的execute方法，所以此时工作线程的数量为0，execute方法通过workerCountOf方法获取到的数量小于corePoolSize，所以可以跳过这个if语句运行到下面语句：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (compareAndIncrementWorkerCount(c))</div><div class="line">    <span class="keyword">break</span> retry;</div></pre></td></tr></table></figure>
+<p>我们看一下compareAndIncrementWorkerCount方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">compareAndIncrementWorkerCount</span><span class="params">(<span class="keyword">int</span> expect)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> ctl.compareAndSet(expect, expect + <span class="number">1</span>);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>很简单的一个方法，只是调用了原子整数变量ctl的compareAndSet方法，并传入当前的ctl值和加一后的ctl值。这个方法是做什么的呢？简单来说，这个方法调用的是原子整数类内部的Unsafe对象的compareAndSwapInt方法，这个方法是一个CAS方法，即“比较并转换”方法，这是一个直接使用CPU进行的原子操作方法，最终达到的效果就是使当前compareAndSet方法中传入的第一个参数值线程安全的变为传入的第二个参数的值，这里也就是使原来的值加一，放到上下文中来说也就是使工作线程数加一，然后返回操作的结果（一个波尔值），执行成功后就返回true，也就执行到if判断内的语句中，执行break retry语句，跳出整个由retry标记的for循环， 如果第一个值没有更新成第二个值，则返回false。</p>
+<p>而如果compareAndIncrementWorkerCount方法返回false，则首先会再通过ctl的get方法读取一次ctl的值，然后获取ctl中现在保存的线程池运行状态，如果和之前在最外层循环刚开始的时候获取的运行状态不一样，则重新开始最外层的循环，否则就重新开始第二层for循环，即用来对工作线程数量加一的循环。</p>
+<p>总的来说，addWorker方法中的两层for循环，<strong>第一层中用来对当前线程池的运行状态进行判断</strong>，运行状态不符合条件则直接返回false，运行到第二层for循环时说明当前线程池是RUNNING状态或者为SHUTDOWN但可以添加为null的Runnable的状态，所以<strong>第二层for循环就是用来为存储的工作线程数量加一</strong>。</p>
+<p>//未完</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">并发</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2017/08/23/threadpool2/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-TODOLIST" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/08/21/TODOLIST/">TODOLIST</a>
+    </h1>
+  
+
+        
+        <a href="/2017/08/21/TODOLIST/" class="archive-article-date">
+  	<time datetime="2017-08-21T09:33:06.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-21</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>EventBus 发送事件、黏性事件、处理事件的源码分析</li>
+<li>单例模式博文</li>
+<li>Picasso源码分析</li>
+<li>AsyncTask源码分析</li>
+<li>线程池分析</li>
+<li>EasyBlur库开发</li>
+<li>Glide源码分析</li>
+<li>网络框架分析</li>
+<li>记账v2.0开发（计划）</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">日常</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">杂记</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/杂记/" class="article-tag-list-link color3">杂记</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2017/08/21/TODOLIST/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-threadpool" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -171,7 +446,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2017/08/17/threadpool/">线程池</a>
+      <a class="article-title" href="/2017/08/17/threadpool/">线程池的简单使用</a>
     </h1>
   
 
@@ -291,15 +566,15 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">杂记</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">数据结构</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">杂记</a>
         		</li>
       		
 		</ul>
@@ -905,98 +1180,10 @@
 
 
   
-    <article id="post-eventBus" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/07/19/eventBus/">EventBus的使用和解析一</a>
-    </h1>
-  
-
-        
-        <a href="/2017/07/19/eventBus/" class="archive-article-date">
-  	<time datetime="2017-07-19T10:40:41.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-19</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>[TOC]</p>
-<h2 id="1-基本定义"><a href="#1-基本定义" class="headerlink" title="1. 基本定义"></a>1. 基本定义</h2><p>EventBus用于<strong>不同线程间、组件间</strong>进行通信，目前版本更新至3.0，与2.0版本相比使用方法上的变化不大，但引入了更多注解的使用，通过@Subscribe注解代替了以前的onEventxxx开头的方法规则，整体更加规范和易于理解。</p>
-        
-          <a class="article-more-a" href="/2017/07/19/eventBus/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">EventBus</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2017/07/19/eventBus/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
+    <nav id="page-nav">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+    </nav>
   
 
 
@@ -1098,15 +1285,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">日常</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1118,19 +1309,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
+                <a href="javascript:void(0)" class="js-tag color3">吐槽</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">日常</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">吐槽</a>
               </li>
              
               <li class="article-tag-list-item">

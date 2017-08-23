@@ -6,18 +6,18 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>线程池 | Rirsa&#39;s Home</title>
+  <title>线程池的简单使用 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="对于普通新线程的使用，我们已经非常熟悉了，甚至从接触Android不久，我们就已经对开启一个新线程有所了解，毕竟语法非常简单，随手就可以开一条线程出来：">
 <meta name="keywords" content="Java,并发">
 <meta property="og:type" content="article">
-<meta property="og:title" content="线程池">
+<meta property="og:title" content="线程池的简单使用">
 <meta property="og:url" content="http://yoursite.com/2017/08/17/threadpool/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
 <meta property="og:description" content="对于普通新线程的使用，我们已经非常熟悉了，甚至从接触Android不久，我们就已经对开启一个新线程有所了解，毕竟语法非常简单，随手就可以开一条线程出来：">
-<meta property="og:updated_time" content="2017-08-17T10:44:02.412Z">
+<meta property="og:updated_time" content="2017-08-23T09:35:08.034Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="线程池">
+<meta name="twitter:title" content="线程池的简单使用">
 <meta name="twitter:description" content="对于普通新线程的使用，我们已经非常熟悉了，甚至从接触Android不久，我们就已经对开启一个新线程有所了解，毕竟语法非常简单，随手就可以开一条线程出来：">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
@@ -171,7 +171,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      线程池
+      线程池的简单使用
     </h1>
   
 
@@ -227,7 +227,13 @@
 <p>需要注意的是，<strong>这种线程池相比cache线程池更适合稳定固定、长时间连接的的正规并发编程</strong>，多用于服务器。</p>
 <h3 id="newScheduledThreadPool"><a href="#newScheduledThreadPool" class="headerlink" title="newScheduledThreadPool"></a>newScheduledThreadPool</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ExecutorService executorService = Executors.newScheduledThreadPool(<span class="number">3</span>);</div></pre></td></tr></table></figure>
 <p>这是一个调度型的线程池，之前提到的定时或定期执行任务的功能就是由这种线程池实现的。</p>
-<p>//未完</p>
+<h3 id="newSingleThreadScheduledExecutor"><a href="#newSingleThreadScheduledExecutor" class="headerlink" title="newSingleThreadScheduledExecutor"></a>newSingleThreadScheduledExecutor</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();</div></pre></td></tr></table></figure>
+<p>这种线程池也可以控制定时或定期执行任务，但是与newScheduledThreadPool的差别是后者可以指定线程数，而这个线程池是固定的一条线程。</p>
+<p>上面五种线程池是可以由工厂类Executors直接创建的，也是官方推荐的创建线程池的方法，但是点进对应的源代码后不难发现，它们本质上还是调用了ThreadPoolExecutor类来构造线程池对象。</p>
+<p>例如 newFixedThreadPool：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> nThreads)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(nThreads, nThreads,</div><div class="line">                                      <span class="number">0L</span>, TimeUnit.MILLISECONDS,</div><div class="line">                                      <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;());</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>所以在大概了解一下五种常用的线程池之后，对于每一种线程池的分析最后还是要深入到ThreadPoolExecutor中解释。</p>
+<p>下一篇我们会从源码对线程池进行分析。</p>
 
       
 
@@ -241,7 +247,7 @@
             <span class="tooltip-content">
               <span class="tooltip-text">
                 <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢大佬<i class="icon icon-quo-right"></i></p>
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>有帮助的话可以给点鼓励哦<i class="icon icon-quo-right"></i></p>
                   <div class="reward-box">
                     
                     <div class="reward-box-item">
@@ -357,6 +363,15 @@
   
 <nav id="article-nav">
   
+    <a href="/2017/08/21/TODOLIST/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          TODOLIST
+        
+      </div>
+    </a>
+  
   
     <a href="/2017/08/15/deque/" id="article-nav-older" class="article-nav-link-wrap">
       <div class="article-nav-title">实现栈和队列推荐使用的ArrayDeque</div>
@@ -386,7 +401,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#四种常用的线程池"><span class="toc-number">1.</span> <span class="toc-text">四种常用的线程池</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#newCachedThreadPool"><span class="toc-number">1.1.</span> <span class="toc-text">newCachedThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newSingleThreadPool"><span class="toc-number">1.2.</span> <span class="toc-text">newSingleThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newFixedThreadPool"><span class="toc-number">1.3.</span> <span class="toc-text">newFixedThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newScheduledThreadPool"><span class="toc-number">1.4.</span> <span class="toc-text">newScheduledThreadPool</span></a></li></ol></li></ol>
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#四种常用的线程池"><span class="toc-number">1.</span> <span class="toc-text">四种常用的线程池</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#newCachedThreadPool"><span class="toc-number">1.1.</span> <span class="toc-text">newCachedThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newSingleThreadPool"><span class="toc-number">1.2.</span> <span class="toc-text">newSingleThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newFixedThreadPool"><span class="toc-number">1.3.</span> <span class="toc-text">newFixedThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newScheduledThreadPool"><span class="toc-number">1.4.</span> <span class="toc-text">newScheduledThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newSingleThreadScheduledExecutor"><span class="toc-number">1.5.</span> <span class="toc-text">newSingleThreadScheduledExecutor</span></a></li></ol></li></ol>
                     </div>
                 </span>
             </div>
@@ -504,15 +519,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">日常</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -524,19 +543,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
+                <a href="javascript:void(0)" class="js-tag color3">吐槽</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">日常</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">吐槽</a>
               </li>
              
               <li class="article-tag-list-item">
