@@ -9,13 +9,13 @@
   <title>线程池源码分析一 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="正如先前看到的，ThreadPoolExecutor有四个构造函数，其中最简单的一个都有五个参数，然而它们最终调用的其实都是七个参数的那个构造函数：">
-<meta name="keywords" content="Java,并发,源码">
+<meta name="keywords" content="源码,Java,并发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="线程池源码分析一">
 <meta property="og:url" content="http://yoursite.com/2017/08/23/threadpool2/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
 <meta property="og:description" content="正如先前看到的，ThreadPoolExecutor有四个构造函数，其中最简单的一个都有五个参数，然而它们最终调用的其实都是七个参数的那个构造函数：">
-<meta property="og:updated_time" content="2017-08-24T09:30:54.830Z">
+<meta property="og:updated_time" content="2017-08-25T08:41:05.494Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="线程池源码分析一">
 <meta name="twitter:description" content="正如先前看到的，ThreadPoolExecutor有四个构造函数，其中最简单的一个都有五个参数，然而它们最终调用的其实都是七个参数的那个构造函数：">
@@ -204,16 +204,11 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> AtomicInteger ctl = <span class="keyword">new</span> AtomicInteger(ctlOf(RUNNING, <span class="number">0</span>));</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> COUNT_BITS = Integer.SIZE - <span class="number">3</span>;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> CAPACITY   = (<span class="number">1</span> &lt;&lt; COUNT_BITS) - <span class="number">1</span>;</div><div class="line"></div><div class="line"><span class="comment">// runState is stored in the high-order bits</span></div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> RUNNING    = -<span class="number">1</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SHUTDOWN   =  <span class="number">0</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STOP       =  <span class="number">1</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TIDYING    =  <span class="number">2</span> &lt;&lt; COUNT_BITS;</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TERMINATED =  <span class="number">3</span> &lt;&lt; COUNT_BITS;</div><div class="line"></div><div class="line"><span class="comment">// Packing and unpacking ctl</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">runStateOf</span><span class="params">(<span class="keyword">int</span> c)</span>     </span>&#123; <span class="keyword">return</span> c &amp; ~CAPACITY; &#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">workerCountOf</span><span class="params">(<span class="keyword">int</span> c)</span>  </span>&#123; <span class="keyword">return</span> c &amp; CAPACITY; &#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">ctlOf</span><span class="params">(<span class="keyword">int</span> rs, <span class="keyword">int</span> wc)</span> </span>&#123; <span class="keyword">return</span> rs | wc; &#125;</div></pre></td></tr></table></figure>
 <p>如果要彻底看懂上面的代码，我们还需要补一下Java基础中的位运算符和移位运算符，上面这段代码中用到的位运算符有&amp;（与）、|（或）和~（非），用到的移位运算符有&lt;&lt;（左移运算符）、&gt;&gt;（右移运算符）。</p>
 <ul>
-<li>&amp;运算：两个二进制数字对应位相与，只有同为1的位才得1，其余情况的位为0</li>
-<li>|运算：两个二进制数字对应位相或，只要有一位为1，则最后得到的数对应的位就为1</li>
-<li>~运算：对一个二进制数进行非运算，则原先是1的位变为0，原先是0的位变为1</li>
-<li>&lt;&lt;运算：x&lt;&lt;num，表示x数字所表示的二进制数字整体左移num位，右边空出的位置由0补足，注意这种移位运算是有限制的，比如上面的代码中做移位运算的是int值，所以转换为二进制之后只有32位，如果有为1的位左移到了第32位，则会变成符号位，使整个数字变成负数，而移出32位之外的位也就是移出去了，不会再作为这个数字的一部分进行位运算</li>
-<li><blockquote>
-<blockquote>
-<p>运算：x&gt;&gt;num，表示x数字的二进制数字整体右移num位，移出位的删除，左边空出的位置分两种情况，如果数字本身是正数，则用0补足，如果是负数，则用1补足</p>
-</blockquote>
-</blockquote>
-</li>
+<li>‘&amp;’运算：两个二进制数字对应位相与，只有同为1的位才得1，其余情况的位为0</li>
+<li>‘|’运算：两个二进制数字对应位相或，只要有一位为1，则最后得到的数对应的位就为1</li>
+<li>‘~’运算：对一个二进制数进行非运算，则原先是1的位变为0，原先是0的位变为1</li>
+<li>‘&lt;&lt;’运算：x&lt;&lt;num，表示x数字所表示的二进制数字整体左移num位，右边空出的位置由0补足，注意这种移位运算是有限制的，比如上面的代码中做移位运算的是int值，所以转换为二进制之后只有32位，如果有为1的位左移到了第32位，则会变成符号位，使整个数字变成负数，而移出32位之外的位也就是移出去了，不会再作为这个数字的一部分进行位运算</li>
+<li>‘&gt;&gt;’运算：x&gt;&gt;num，表示x数字的二进制数字整体右移num位，移出位的删除，左边空出的位置分两种情况，如果数字本身是正数，则用0补足，如果是负数，则用1补足</li>
 </ul>
 <p>了解了这一块基础知识后，再来看上面的代码，首先Integer.SIZE获取的是int值的大小，也就是32位，所以COUNT_BITS也就是29，CAPACITY使用了左移运算，对1的二进制左移29后减1，过程如下：</p>
 <blockquote>
@@ -242,7 +237,7 @@
 <p>这个if语句包含的逻辑判断比较复杂，也是通过这个if语句实现了不能向线程池中添加线程的策略。将整个if语句拆开来看可以分为下面几种情况：</p>
 <ul>
 <li>rs&gt;=SHUTDOWN、且rs！=SHUTDOWN时会直接返回false，即<strong>rs&gt;SHUTDOWN时，也就是线程池状态为STOP\TIDYING\TERMINATED中的任意一个值都会直接在这里返回false</strong>；</li>
-<li><strong>rs==SHUTDOWN、且firstTask！=null时直接返回false</strong>，firstTask是调用execute方法时传入的Runnable对象，就是说如果线程池为SHUTDOWN状态，此时直接调用execute方法向线程池添加<strong>不为null</strong>的Runnable对象会直接返回false；</li>
+<li><strong>rs==SHUTDOWN、且firstTask！=null时直接返回false</strong>，firstTask是调用execute方法时传入的Runnable对象，就是说如果线程池为SHUTDOWN状态，此时直接调用execute方法向线程池添加<strong>不为null</strong>的Runnable对象会直接返回false,即SHUTDOWN状态的线程池不允许再添加不为null的任务；</li>
 <li><strong>rs==SHUTDOWN、且firstTask为null、且workQueue为empty时直接返回false</strong>，workQueue是任务队列，就是说，如果任务队列中没有还未执行的任务，此时由execute方法传入<strong>为null</strong>的Runnable对象firstTask会直接返回false，但是反过来看，也就是说如果workQueue不为空、rs为SHUTDOWN，此时传入为null的firstTask是不会被返回false的，这是为什么呢？后面的源码会给出解答。</li>
 </ul>
 <p>总结来说，线程池运行状态&gt;SHUTDOWN、线程池运行状态为SHUTDOWN且execute进来的Runnable对象不为空、线程池运行状态为SHUTDOWN且execute进来的Runnable为空但任务队列为空这三种情况下该方法会直接返回false，不会进行接下来的操作。</p>
@@ -286,7 +281,7 @@
 <p>可以看到，方法里首先获取了当前运行的线程对象wt，然后获取了传入的Worker对象中的Runnable对象task，获取当前运行的线程对象其实就是为了后面可以对该线程进行interrupt操作，这里不是重点，我们看对task的操作。</p>
 <p>我们看到，在try块中有一个while循环，循环条件是task != null || (task = getTask()) != null，如果还记得一开始对addWorker方法进行的分析，不难记得addWorker在前半部分的第一层循环中对线程池的运行状态做了一个判断，而在线程池状态为SHUTDOWN状态时，如果参数传入的firstTask为null且任务队列不为空，还是可以成功的将为null的Runnable对象运行到addWorker方法的后半部分代码，不知道当时有没有对这个地方存有疑惑，为什么需要添加为null的firstTask呢？答案就在这里了。</p>
 <p>如果我们execute时传入的Runnable对象为null，且此时线程池运行状态为SHUTDOWN，任务队列不为空，则此处如果要运行到while循环里面的代码，就要调用到getTask方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> Runnable <span class="title">getTask</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">boolean</span> timedOut = <span class="keyword">false</span>; <span class="comment">// Did the last poll() time out?</span></div><div class="line"></div><div class="line">        <span class="keyword">for</span> (;;) &#123;</div><div class="line">            <span class="keyword">int</span> c = ctl.get();</div><div class="line">            <span class="keyword">int</span> rs = runStateOf(c);</div><div class="line">            <span class="comment">//1.如果是shutdown状态且工作队列为空则进入if</span></div><div class="line">            <span class="comment">//2.如果&gt;=stop状态，不管队列是否为空都直接进入if</span></div><div class="line">            <span class="keyword">if</span> (rs &gt;= SHUTDOWN &amp;&amp; (rs &gt;= STOP || workQueue.isEmpty())) &#123;</div><div class="line">                <span class="comment">//死循环每次将工作线程数-1</span></div><div class="line">                decrementWorkerCount();</div><div class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">int</span> wc = workerCountOf(c);</div><div class="line">            <span class="comment">//timed标识当前worker超时是否退出，如果wc&gt;corePoolSize，说明工作线程数超过了核心线程数，需要</span></div><div class="line">            <span class="comment">//减少核心线程数</span></div><div class="line">            <span class="keyword">boolean</span> timed = allowCoreThreadTimeOut || wc &gt; corePoolSize;</div><div class="line"></div><div class="line">            <span class="keyword">if</span> ((wc &gt; maximumPoolSize || (timed &amp;&amp; timedOut))</div><div class="line">                &amp;&amp; (wc &gt; <span class="number">1</span> || workQueue.isEmpty())) &#123;</div><div class="line">                <span class="keyword">if</span> (compareAndDecrementWorkerCount(c))</div><div class="line">                    <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">                <span class="keyword">continue</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                Runnable r = timed ?</div><div class="line">                    workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :</div><div class="line">                    workQueue.take();</div><div class="line">                <span class="keyword">if</span> (r != <span class="keyword">null</span>)</div><div class="line">                    <span class="keyword">return</span> r;</div><div class="line">                timedOut = <span class="keyword">true</span>;</div><div class="line">            &#125; <span class="keyword">catch</span> (InterruptedException retry) &#123;</div><div class="line">                timedOut = <span class="keyword">false</span>;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> Runnable <span class="title">getTask</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">boolean</span> timedOut = <span class="keyword">false</span>; <span class="comment">// Did the last poll() time out?</span></div><div class="line"></div><div class="line">        <span class="keyword">for</span> (;;) &#123;</div><div class="line">            <span class="keyword">int</span> c = ctl.get();</div><div class="line">            <span class="keyword">int</span> rs = runStateOf(c);</div><div class="line">            <span class="comment">//1.如果是shutdown状态且工作队列为空则进入if</span></div><div class="line">            <span class="comment">//2.如果&gt;=stop状态，不管队列是否为空都直接进入if</span></div><div class="line">            <span class="comment">//进入if后的操作就是将工作线程数不断-1直到清零</span></div><div class="line">            <span class="keyword">if</span> (rs &gt;= SHUTDOWN &amp;&amp; (rs &gt;= STOP || workQueue.isEmpty())) &#123;</div><div class="line">                <span class="comment">//死循环每次将工作线程数-1</span></div><div class="line">                decrementWorkerCount();</div><div class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">int</span> wc = workerCountOf(c);</div><div class="line">            <span class="comment">//timed标识当前worker超时是否退出，如果wc&gt;corePoolSize，说明工作线程数超过了核心线程数，需要</span></div><div class="line">            <span class="comment">//减少核心线程数</span></div><div class="line">            <span class="keyword">boolean</span> timed = allowCoreThreadTimeOut || wc &gt; corePoolSize;</div><div class="line"></div><div class="line">            <span class="keyword">if</span> ((wc &gt; maximumPoolSize || (timed &amp;&amp; timedOut))</div><div class="line">                &amp;&amp; (wc &gt; <span class="number">1</span> || workQueue.isEmpty())) &#123;</div><div class="line">                <span class="keyword">if</span> (compareAndDecrementWorkerCount(c))</div><div class="line">                    <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">                <span class="keyword">continue</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                Runnable r = timed ?</div><div class="line">                    workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :</div><div class="line">                    workQueue.take();</div><div class="line">                <span class="keyword">if</span> (r != <span class="keyword">null</span>)</div><div class="line">                    <span class="keyword">return</span> r;</div><div class="line">                timedOut = <span class="keyword">true</span>;</div><div class="line">            &#125; <span class="keyword">catch</span> (InterruptedException retry) &#123;</div><div class="line">                timedOut = <span class="keyword">false</span>;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
 <p>简单来说，这个方法的作用就是处理任务队列中的任务，具体代码的意义写在上面代码的注释里，最后根据timed的取值对任务队列进行poll或take操作，如果取出的Runnable对象不为null就直接返回。<br>//这里不太清晰，之后再回头看一次</p>
 <p>在取到task之后，其实就是让task这个Runnable对象run起来，所以runWorker方法所做的事就是<strong>先运行起传入的不为null的Runnable对象，运行完之后再通过getTask从任务队列中取出新的task执行run方法。</strong></p>
 <p>这里要注意的是在每个task执行前后，分别执行了beforeExecute和afterExecute方法，这两个方法是空方法，如果要自定义线程池使用，这两个方法是可以覆写来进行扩展操作的。</p>
@@ -335,15 +330,15 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">并发</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
         		</li>
       		
 		</ul>
@@ -423,6 +418,15 @@
 
   
 <nav id="article-nav">
+  
+    <a href="/2017/08/25/threadpool3/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          线程池源码分析二
+        
+      </div>
+    </a>
   
   
     <a href="/2017/08/21/TODOLIST/" id="article-nav-older" class="article-nav-link-wrap">
@@ -567,10 +571,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
@@ -579,11 +579,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">日常</a>
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -595,11 +595,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">并发</a>
+                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+                <a href="javascript:void(0)" class="js-tag color3">日常</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">吐槽</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">并发</a>
               </li>
              
               <li class="article-tag-list-item">
