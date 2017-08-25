@@ -8,17 +8,17 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>线程池源码分析二 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="经过了层层波折，总算是把addWorker大致走了下来，那么addWorker的返回值是返回到execute方法里的，为了方便阅读我们再把execute方法源码放在下面：12345678910111213141516171819public void execute(Runnable command) &amp;#123;        if (command == null)            th">
+  <meta name="description" content="经过了层层波折，总算是把addWorker大致走了下来，那么addWorker的返回值是返回到execute方法里的，为了方便阅读我们再把execute方法源码放在下面：">
 <meta name="keywords" content="源码,Java,并发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="线程池源码分析二">
 <meta property="og:url" content="http://yoursite.com/2017/08/25/threadpool3/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="经过了层层波折，总算是把addWorker大致走了下来，那么addWorker的返回值是返回到execute方法里的，为了方便阅读我们再把execute方法源码放在下面：12345678910111213141516171819public void execute(Runnable command) &amp;#123;        if (command == null)            th">
-<meta property="og:updated_time" content="2017-08-25T08:51:19.965Z">
+<meta property="og:description" content="经过了层层波折，总算是把addWorker大致走了下来，那么addWorker的返回值是返回到execute方法里的，为了方便阅读我们再把execute方法源码放在下面：">
+<meta property="og:updated_time" content="2017-08-25T08:53:01.704Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="线程池源码分析二">
-<meta name="twitter:description" content="经过了层层波折，总算是把addWorker大致走了下来，那么addWorker的返回值是返回到execute方法里的，为了方便阅读我们再把execute方法源码放在下面：12345678910111213141516171819public void execute(Runnable command) &amp;#123;        if (command == null)            th">
+<meta name="twitter:description" content="经过了层层波折，总算是把addWorker大致走了下来，那么addWorker的返回值是返回到execute方法里的，为了方便阅读我们再把execute方法源码放在下面：">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -184,7 +184,9 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>经过了层层波折，总算是把addWorker大致走了下来，那么addWorker的返回值是返回到execute方法里的，为了方便阅读我们再把execute方法源码放在下面：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (command == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        <span class="keyword">int</span> c = ctl.get();</div><div class="line">        <span class="keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;</div><div class="line">            <span class="keyword">if</span> (addWorker(command, <span class="keyword">true</span>))</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            c = ctl.get();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</div><div class="line">            <span class="keyword">int</span> recheck = ctl.get();</div><div class="line">            <span class="keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))</div><div class="line">                reject(command);</div><div class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (workerCountOf(recheck) == <span class="number">0</span>)</div><div class="line">                addWorker(<span class="keyword">null</span>, <span class="keyword">false</span>);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="keyword">false</span>))</div><div class="line">            reject(command);</div><div class="line">    &#125;</div></pre></td></tr></table></figure></p>
+        <p>经过了层层波折，总算是把addWorker大致走了下来，那么addWorker的返回值是返回到execute方法里的，为了方便阅读我们再把execute方法源码放在下面：</p>
+<a id="more"></a>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (command == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        <span class="keyword">int</span> c = ctl.get();</div><div class="line">        <span class="keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;</div><div class="line">            <span class="keyword">if</span> (addWorker(command, <span class="keyword">true</span>))</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            c = ctl.get();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</div><div class="line">            <span class="keyword">int</span> recheck = ctl.get();</div><div class="line">            <span class="keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))</div><div class="line">                reject(command);</div><div class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (workerCountOf(recheck) == <span class="number">0</span>)</div><div class="line">                addWorker(<span class="keyword">null</span>, <span class="keyword">false</span>);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="keyword">false</span>))</div><div class="line">            reject(command);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
 <p>先前第一次提到这个方法时就是分析到第五行代码才扯到复杂的addWorker方法里的，大概了解了addWorker方法的逻辑后，现在我们再回来看execute方法。</p>
 <p>通过ctl的get方法获得可进行原子操作的整数c后，通过workerCountOf方法获取到c中存储的工作线程数并与corPoolSize进行比较，如果小于corePoolSize就直接进行addWorker（command，true）操作，经过前面的分析我们已经知道，这里传入的true表示在addWorker方法前半部分第二层for循环中工作线程数会与corePoolSize（而不是maximumPoolSize）进行比较，小于后者后将command作为参数初始化一个Worker对象和对象中的线程，并将这个Worker添加进workers的hashmap，最后运行command的run方法，而addWorker成功后，也就会直接返回一个true值，execute方法也就结束了。</p>
 <p><strong>也就是说，①如果当前工作线程数小于corePoolSize，新建的任务会直接启动一条新线程，并立刻执行当前任务。</strong></p>
@@ -488,6 +490,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
@@ -496,11 +506,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
+                <a href="javascript:void(0)" class="js-tag color3">日常</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -512,23 +522,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">日常</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">吐槽</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">并发</a>
+                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
+                <a href="javascript:void(0)" class="js-tag color3">并发</a>
               </li>
             
             <div class="clearfix"></div>
