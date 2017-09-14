@@ -6,17 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: 杂记 | Rirsa&#39;s Home</title>
+  <title>单例模式的总结 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="be strong,be friends">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Rirsa&#39;s Home">
-<meta property="og:url" content="http://yoursite.com/tags/杂记/index.html">
+  <meta name="description" content="单例模式作为最基础的一种设计模式，却是面试中最常被问及的知识点之一，这里作为复习，也为了加深自己的理解和记忆，再次将几种单例模式总结在这篇博文中。">
+<meta name="keywords" content="Java,设计模式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="单例模式的总结">
+<meta property="og:url" content="http://yoursite.com/2017/09/14/singleTon/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="be strong,be friends">
+<meta property="og:description" content="单例模式作为最基础的一种设计模式，却是面试中最常被问及的知识点之一，这里作为复习，也为了加深自己的理解和记忆，再次将几种单例模式总结在这篇博文中。">
+<meta property="og:updated_time" content="2017-09-14T15:18:54.156Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Rirsa&#39;s Home">
-<meta name="twitter:description" content="be strong,be friends">
+<meta name="twitter:title" content="单例模式的总结">
+<meta name="twitter:description" content="单例模式作为最基础的一种设计模式，却是面试中最常被问及的知识点之一，这里作为复习，也为了加深自己的理解和记忆，再次将几种单例模式总结在这篇博文中。">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -162,132 +164,231 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-singleTon" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/09/13/TODOLIST/" class="archive-article-date">
-  	<time datetime="2017-09-13T09:33:06.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-09-13</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/09/13/TODOLIST/">TODOLIST</a>
+    <h1 class="article-title" itemprop="name">
+      单例模式的总结
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2017/09/14/singleTon/" class="archive-article-date">
+  	<time datetime="2017-09-14T15:17:38.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-09-14</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>单例模式作为最基础的一种设计模式，却是面试中最常被问及的知识点之一，这里作为复习，也为了加深自己的理解和记忆，再次将几种单例模式总结在这篇博文中。</p>
+<a id="more"></a>
+<h2 id="懒汉式（线程不安全）"><a href="#懒汉式（线程不安全）" class="headerlink" title="懒汉式（线程不安全）"></a>懒汉式（线程不安全）</h2><p>单例模式最后的目的无非就是获取当前存在的实例对象，如果没有实例对象就实例化一个，有就直接返回。所谓懒汉式，可以从名字进行理解，就是在你第一次使用这个实例之前我都（懒得）不去进行实例化，一直等到第一次需要使用到这个单例的地方再（迫不得已）实例化。</p>
+<p>提到单例模式，多数没有深入探究过单例模式的开发者会直接写出下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SingleTon</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> SingleTon instance;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">private</span> <span class="title">SingleTon</span><span class="params">()</span></span>&#123;</div><div class="line"></div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> SingleTon <span class="title">getInstance</span><span class="params">()</span></span>&#123;</div><div class="line">        <span class="keyword">if</span> (instance==<span class="keyword">null</span>)&#123;</div><div class="line">            instance = <span class="keyword">new</span> SingleTon();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> instance;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>而上面的代码也就是懒汉式的单例模式，只有在第一次调用了getInstance方法的地方才会对instance进行实例化。</p>
+<p>这种单例模式的写法在单线程的时候没有问题，但需要注意的是，在 多线程的情况下，这种单例模式的写法可能会出现实例化多个单例的情况，即<strong>这种懒汉模式是线程不安全的</strong>，所以一般情况下也是不推荐这么写单例的。</p>
+<h2 id="懒汉式（线程安全）"><a href="#懒汉式（线程安全）" class="headerlink" title="懒汉式（线程安全）"></a>懒汉式（线程安全）</h2><p>像多数线程不安全的问题的解决方法相同，实现线程安全的懒汉单例进行加锁即可，例如直接将锁加在上面的例子里获取单例的静态方法getInstance上：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> SingleTon <span class="title">getInstance</span><span class="params">()</span></span>&#123;</div><div class="line">        <span class="keyword">if</span> (instance==<span class="keyword">null</span>)&#123;</div><div class="line">            instance = <span class="keyword">new</span> SingleTon();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> instance;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>显然，这种方法可以解决线程不安全的问题，即使多线程并行也只会存在一个单例，但这种方法的缺点是<strong>效率太低</strong>，仔细想想，其实有必要进行加锁的只有第一次判断instance为空而进行实例化的时候，而在instance实例化完成后，后面无论是哪个线程读取到的instance都已经不为null，可以直接将当前instance返回。而这种对整个方法进行加锁的操作则会使得每一次获取单例都进行加锁，效率十分低下。</p>
+<h2 id="双重检验锁"><a href="#双重检验锁" class="headerlink" title="双重检验锁"></a>双重检验锁</h2><p>针对上面提出的问题，出现了第三种单例模式的写法，即双重检验锁的单例模式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> SingleTon <span class="title">getInstance</span><span class="params">()</span></span>&#123;</div><div class="line">        <span class="keyword">if</span> (instance==<span class="keyword">null</span>)&#123;</div><div class="line">            <span class="keyword">synchronized</span> (SingleTon.class)&#123;</div><div class="line">                <span class="keyword">if</span> (instance==<span class="keyword">null</span>)&#123;</div><div class="line">                    instance = <span class="keyword">new</span> SingleTon();</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> instance;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>所谓双层检验锁，即像上面的例子中所示的，在加锁前后对实例对象进行两次判空的检验，加锁是为了第一次对象实例化的线程同步，而锁内还要有第二层判空是因为<strong>可能会有多个线程进入第一层if判断内部，而在加锁代码块外排队等候</strong>，如果锁内不进行第二次检验，仍然会出现实例化多个对象的情况。</p>
+<p>而进行了双重检验之后，除了第一次实例化需要进行加锁同步，之后的线程只要进行第一层的if判断不为空即可直接返回，而不用每一次获取单例都加锁同步，因此相比前面两种单例模式的写法，更推荐用这种双层检验锁的方式来写单例。</p>
+<p>然而，双层检验锁也不是完美的，问题出现在对单例对象进行实例化的过程中，在执行instance = new SingleTon()这句代码时大概做了三件事：</p>
+<ol>
+<li>给instance分配内存空间</li>
+<li>通过调用SingleTon的构造函数初始化成员变量</li>
+<li>将instance这个引用指向先前分配好的内存空间</li>
+</ol>
+<p>JVM在执行编译的时候实际上不能保证上述三件事中2和3的执行顺序，也就是说可能发生的执行顺序是123或132，如果是123的执行顺序则不会发生问题，而如果是132的执行顺序，<strong>则instance作为一个引用，在指向分配好的内存空间的时候本身就已经不为null了</strong>，此时如果有另一条线程调用getInstance方法，则会直接将还没有对成员变量完成初始化的instance返回，程序就可能发生崩溃。</p>
+<p>为了解决这个问题，我们加入了violate关键字：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> violate SingleTon instance;</div></pre></td></tr></table></figure>
+<p>violate的作用可以理解为一个读写锁，使用violate修饰后，一旦开始对instance进行操作，则只能将前面所说的三步全部进行完之后才能再读取instance，有了violate关键字，才能解决上面提到的问题。</p>
+<p>但是violate关键字在java1.5版本之前也是有问题的，在Java1.5之后才可以正常使用。所以<strong>在Java中使用violate+双重检查锁也不是尽善尽美的。</strong></p>
+<h2 id="饿汉式"><a href="#饿汉式" class="headerlink" title="饿汉式"></a>饿汉式</h2><p>可以看到，前面说的所有问题的根源都出在多线程上，如果可以解决多线程同步的问题，那么前面的问题也就迎刃而解了，于是就出现了饿汉式的单例模式。</p>
+<p>对比懒汉式，懒汉是懒得进行实例化，直到要用到这个单例的时候才进行实例化，那么饿汉就是饥饿难耐、等不及的就进行了实例化，直接来看代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SingleTon</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> SingleTon instance = <span class="keyword">new</span> SingleTon();</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">private</span> <span class="title">SingleTon</span><span class="params">()</span></span>&#123;</div><div class="line"></div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> SingleTon <span class="title">getInstance</span><span class="params">()</span></span>&#123;</div><div class="line">        <span class="keyword">return</span> instance;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>显然，由于被修饰为static变量，instance会在类第一次加载到内存中时就进行了实例化，由于类加载机制的特性，这种写法本身就是线程安全的，所以不会有前面三种方式中存在的问题。</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>有帮助的话可以给点鼓励哦<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://ww1.sinaimg.cn/large/006aoiFpgy1fii2bu1zqfj30u019jqa0.jpg">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://ww1.sinaimg.cn/large/006aoiFpgy1fii2c52suhj30yi1bcace.jpg">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">日常</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">杂记</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/杂记/" class="article-tag-list-link color3">杂记</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/08/15/deque/" class="archive-article-date">
-  	<time datetime="2017-08-15T10:44:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-15</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/08/15/deque/">实现栈和队列推荐使用的ArrayDeque</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">杂记</a>
-        		</li>
-      		 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">数据结构</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">设计模式</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="/categories/杂记/" class="article-tag-list-link color3">杂记</a>
+        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
         		</li>
       		
 		</ul>
 	</div>
 
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/09/14/singleTon/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2017/09/13/TODOLIST/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">TODOLIST</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#懒汉式（线程不安全）"><span class="toc-number">1.</span> <span class="toc-text">懒汉式（线程不安全）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#懒汉式（线程安全）"><span class="toc-number">2.</span> <span class="toc-text">懒汉式（线程安全）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#双重检验锁"><span class="toc-number">3.</span> <span class="toc-text">双重检验锁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#饿汉式"><span class="toc-number">4.</span> <span class="toc-text">饿汉式</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
 
 
           </div>
@@ -310,9 +411,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
