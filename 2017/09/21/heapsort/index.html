@@ -6,19 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>线程池的简单使用 | Rirsa&#39;s Home</title>
+  <title>堆排序 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="对于普通新线程的使用，我们已经非常熟悉了，甚至从接触Android不久，我们就已经对开启一个新线程有所了解，毕竟语法非常简单，随手就可以开一条线程出来：">
-<meta name="keywords" content="Java,并发">
+  <meta name="description" content="占坑，复习博客期间发现需要补学的东西">
+<meta name="keywords" content="Java,数据结构">
 <meta property="og:type" content="article">
-<meta property="og:title" content="线程池的简单使用">
-<meta property="og:url" content="http://yoursite.com/2017/08/17/threadpool/index.html">
+<meta property="og:title" content="堆排序">
+<meta property="og:url" content="http://yoursite.com/2017/09/21/heapsort/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="对于普通新线程的使用，我们已经非常熟悉了，甚至从接触Android不久，我们就已经对开启一个新线程有所了解，毕竟语法非常简单，随手就可以开一条线程出来：">
-<meta property="og:updated_time" content="2017-08-23T09:35:08.034Z">
+<meta property="og:description" content="占坑，复习博客期间发现需要补学的东西">
+<meta property="og:updated_time" content="2017-09-21T13:28:08.019Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="线程池的简单使用">
-<meta name="twitter:description" content="对于普通新线程的使用，我们已经非常熟悉了，甚至从接触Android不久，我们就已经对开启一个新线程有所了解，毕竟语法非常简单，随手就可以开一条线程出来：">
+<meta name="twitter:title" content="堆排序">
+<meta name="twitter:description" content="占坑，复习博客期间发现需要补学的东西">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -164,76 +164,27 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-threadpool" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-heapsort" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      线程池的简单使用
+      堆排序
     </h1>
   
 
         
-        <a href="/2017/08/17/threadpool/" class="archive-article-date">
-  	<time datetime="2017-08-17T10:39:54.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-17</time>
+        <a href="/2017/09/21/heapsort/" class="archive-article-date">
+  	<time datetime="2017-09-21T13:26:45.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-09-21</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>对于普通新线程的使用，我们已经非常熟悉了，甚至从接触Android不久，我们就已经对开启一个新线程有所了解，毕竟语法非常简单，随手就可以开一条线程出来：</p>
-<a id="more"></a>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</div><div class="line">            <span class="meta">@Override</span></div><div class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">                <span class="comment">//do something</span></div><div class="line">            &#125;</div><div class="line">        &#125;).start();</div></pre></td></tr></table></figure>
-<p>这种匿名内部类的写法因为足够简便所以很受欢迎，还有两种广为人知的线程开启方法，分别是继承Thread和实现Runnable接口，当然换汤不换药，原理上都是调用Thread对象的start方法开启新线程。如果只是需要开一两条新线程做一些轻量级的操作确实可以这么写，但是这样写有很多弊端：</p>
-<blockquote>
-<ul>
-<li>首先很明显的是，<strong>这种开启新线程的写法没有数量的限制</strong>，也就是说如果有一个需要开启大量新线程的需求，则每次都会新开辟一块内存用来运行新线程，<strong>大量线程的创建和执行将直接影响系统的吞吐量</strong>，如果内存占用过多，甚至会导致oom；</li>
-<li>其次，不只是线程的创建，线程的销毁也是需要时间的，当有<strong>大量线程创建和销毁时，性能上的损耗是很明显的</strong>；</li>
-<li>同时，线程太多且<strong>缺乏统一管理</strong>的情况下，可能会出现<strong>大量线程抢占系统资源</strong>导致的阻塞现象；</li>
-<li>缺乏定时执行、定期执行、单线程、并发控制等功能。</li>
-</ul>
-</blockquote>
-<p>而将上面的弊端解决的，就是线程池：</p>
-<blockquote>
-<ul>
-<li>重用存在的线程，减少对象创建、销毁的开销，提高性能；</li>
-<li>能够控制最大线程数，避免大量线程出现抢占系统资源导致阻塞的情况，提高系统资源的利用率；</li>
-<li>提供定时、定期、单线程、并发数控制等功能。</li>
-</ul>
-</blockquote>
-<p>所以说，在不知道可能会需要创建多少新线程的地方，应该优先考虑使用线程池。下面就线程池进行一下详解。</p>
-<p>整个线程池最顶部的接口是Executor，它提供一个execute方法，接收一个实现Runnable接口的对象作为参数，然而真正实现线程池的时候一般不是使用Executor来实现，而是使用另一个实现了Executor接口的接口ExecutorService。ExecutorService基本提供了线程池管理线程所需要的全部方法，所以ExecutorService才是真正用来实现线程池的接口。</p>
-<p>而最终实现ExecutorService接口，将方法具体下来实现线程池功能的、真正意义的线程池类是ThreadPoolExecutor。</p>
-<p>像其他实体类一样，ThreadPoolExecutor类的初始化也是要通过调用构造函数，我们来看一下ThreadPoolExecutor的构造函数：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize,</span></span></div><div class="line">                              <span class="keyword">int</span> maximumPoolSize,</div><div class="line">                              <span class="keyword">long</span> keepAliveTime,</div><div class="line">                              TimeUnit unit,</div><div class="line">                              BlockingQueue&lt;Runnable&gt; workQueue) &#123;</div><div class="line">        <span class="keyword">this</span>(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,</div><div class="line">             Executors.defaultThreadFactory(), defaultHandler);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
-<p>打开源码的你可能有点懵逼，但是你没有看错，ThreadPoolExecutor类有四个构造函数，上面这个五个参数的构造函数是其中看起来最简单的、也就是参数最少的一个。</p>
-<p>最简单的构造函数都是五个参数，看着就很头大，源代码开发者自然不会不照顾用户情绪，所以其实早已准备好一个工厂类Executors，通过这个工厂类可以十分快捷的创建四种比较常用的线程池，下面暂时把ThreadPoolExecutor放在一边，看一下这四种线程池。</p>
-<h2 id="四种常用的线程池"><a href="#四种常用的线程池" class="headerlink" title="四种常用的线程池"></a>四种常用的线程池</h2><h3 id="newCachedThreadPool"><a href="#newCachedThreadPool" class="headerlink" title="newCachedThreadPool"></a>newCachedThreadPool</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ExecutorService executor = Executors.newCachedThreadPool();</div></pre></td></tr></table></figure>
-<p>这是一个可缓存、且可根据实际情况调整线程数量的线程池。</p>
-<p>使用这个线程池对象调用execute方法时，如果有以前创建的<strong>可用的</strong>线程，该线程就会被重用，如果没有可用的线程，就重新创建一个新线程添加到池中。</p>
-<p>之所以要把<strong>可用的</strong>重点标注出来，是因为并不是所有的以前构建的线程都被缓存可用，newCachedThreadPool 只会将没有任务运行的线程缓存60s，超过60s没有被使用的线程就会被终止并从缓存中移除。</p>
-<p>注意创建这种线程池的时候可以不传参或者传入一个ThreadFactory对象，也就是说不需要传入与线程数有关的参数，因为newCachedThreadPool默认最大线程数是Integer.MAX_VALUE，相当于没有对最大线程数做限制。</p>
-<p>也就是说，这种线程池可以自动根据情况实现线程的复用，而且使用这种线程池不用担心线程的结束问题，如果缓存的线程超过60s没有被复用就会被终止移除。</p>
-<p>这种线程池不适合面向连接的daemon型任务，但是<strong>是执行很多生存期很短的异步任务时的首选</strong></p>
-<h3 id="newSingleThreadPool"><a href="#newSingleThreadPool" class="headerlink" title="newSingleThreadPool"></a>newSingleThreadPool</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ExecutorService executorService = Executors.newSingleThreadExecutor();</div></pre></td></tr></table></figure>
-<p>根据类名也可以看出来，这个线程池只创建一个线程，实际上从源码上看，这个类的创建方式就是创建一个核心线程数和最大线程数都为1的ThreadPoolExecutor对象，所以也不需要在创建的时候传入线程数之类的参数。</p>
-<p>这种线程池中因为只有一个线程在运行，所以自然所有任务都是串行的，除了正在运行的任务，其他任务按照提交顺序存储在一个队列中，之后会依次按照提交顺序处理任务。</p>
-<p>需要注意的是，<strong>如果这个唯一的工作线程因为异常停止，那么会有一个新的线程来替代它。</strong></p>
-<h3 id="newFixedThreadPool"><a href="#newFixedThreadPool" class="headerlink" title="newFixedThreadPool"></a>newFixedThreadPool</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ExecutorService executorService = Executors.newFixedThreadPool(<span class="number">10</span>);</div></pre></td></tr></table></figure>
-<p>这个线程池创建的时候要传入一个数字，这个数字即这个线程池固定的最大线程数大小，它也能复用以前创建的空闲的线程，但不能自由的创建新线程，如果在超过固定线程数后还传进新建线程的任务，只能放到队列中等待，直到当前满了的线程池中有线程终止移出池子，再按提交的顺序上去运行。</p>
-<p>需要注意的是，<strong>这种线程池相比cache线程池更适合稳定固定、长时间连接的的正规并发编程</strong>，多用于服务器。</p>
-<h3 id="newScheduledThreadPool"><a href="#newScheduledThreadPool" class="headerlink" title="newScheduledThreadPool"></a>newScheduledThreadPool</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ExecutorService executorService = Executors.newScheduledThreadPool(<span class="number">3</span>);</div></pre></td></tr></table></figure>
-<p>这是一个调度型的线程池，之前提到的定时或定期执行任务的功能就是由这种线程池实现的。</p>
-<h3 id="newSingleThreadScheduledExecutor"><a href="#newSingleThreadScheduledExecutor" class="headerlink" title="newSingleThreadScheduledExecutor"></a>newSingleThreadScheduledExecutor</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();</div></pre></td></tr></table></figure>
-<p>这种线程池也可以控制定时或定期执行任务，但是与newScheduledThreadPool的差别是后者可以指定线程数，而这个线程池是固定的一条线程。</p>
-<p>上面五种线程池是可以由工厂类Executors直接创建的，也是官方推荐的创建线程池的方法，但是点进对应的源代码后不难发现，它们本质上还是调用了ThreadPoolExecutor类来构造线程池对象。</p>
-<p>例如 newFixedThreadPool：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> nThreads)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(nThreads, nThreads,</div><div class="line">                                      <span class="number">0L</span>, TimeUnit.MILLISECONDS,</div><div class="line">                                      <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;());</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
-<p>所以在大概了解一下五种常用的线程池之后，对于每一种线程池的分析最后还是要深入到ThreadPoolExecutor中解释。</p>
-<p>下一篇我们会从源码对线程池进行分析。</p>
+        <p>占坑，复习博客期间发现需要补学的东西</p>
 
       
 
@@ -282,7 +233,7 @@
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">并发</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">数据结构</a>
         		</li>
       		
 		</ul>
@@ -349,7 +300,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/08/17/threadpool/" alt="微信分享二维码">
+      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/09/21/heapsort/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -363,18 +314,9 @@
   
 <nav id="article-nav">
   
-    <a href="/2017/08/23/threadpool2/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          线程池源码分析一
-        
-      </div>
-    </a>
   
-  
-    <a href="/2017/08/15/deque/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">实现栈和队列推荐使用的ArrayDeque</div>
+    <a href="/2017/09/14/singleTon/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">单例模式的总结</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -401,7 +343,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#四种常用的线程池"><span class="toc-number">1.</span> <span class="toc-text">四种常用的线程池</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#newCachedThreadPool"><span class="toc-number">1.1.</span> <span class="toc-text">newCachedThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newSingleThreadPool"><span class="toc-number">1.2.</span> <span class="toc-text">newSingleThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newFixedThreadPool"><span class="toc-number">1.3.</span> <span class="toc-text">newFixedThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newScheduledThreadPool"><span class="toc-number">1.4.</span> <span class="toc-text">newScheduledThreadPool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#newSingleThreadScheduledExecutor"><span class="toc-number">1.5.</span> <span class="toc-text">newSingleThreadScheduledExecutor</span></a></li></ol></li></ol>
+                    目录，不存在的…
                     </div>
                 </span>
             </div>
