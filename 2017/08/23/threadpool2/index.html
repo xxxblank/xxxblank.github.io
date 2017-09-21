@@ -15,7 +15,7 @@
 <meta property="og:url" content="http://yoursite.com/2017/08/23/threadpool2/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
 <meta property="og:description" content="正如先前看到的，ThreadPoolExecutor有四个构造函数，其中最简单的一个都有五个参数，然而它们最终调用的其实都是七个参数的那个构造函数：">
-<meta property="og:updated_time" content="2017-08-25T08:41:05.494Z">
+<meta property="og:updated_time" content="2017-09-21T12:11:49.744Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="线程池源码分析一">
 <meta name="twitter:description" content="正如先前看到的，ThreadPoolExecutor有四个构造函数，其中最简单的一个都有五个参数，然而它们最终调用的其实都是七个参数的那个构造函数：">
@@ -207,6 +207,7 @@
 <li>‘&amp;’运算：两个二进制数字对应位相与，只有同为1的位才得1，其余情况的位为0</li>
 <li>‘|’运算：两个二进制数字对应位相或，只要有一位为1，则最后得到的数对应的位就为1</li>
 <li>‘~’运算：对一个二进制数进行非运算，则原先是1的位变为0，原先是0的位变为1</li>
+<li>‘^’运算：对两个二进制数进行异或运算，对应位置上的两个二进制数相同则结果中该位为0，相异则结果中该位为1.这个运算没出现在上面的代码中，但是和与、或、非属于一个系列的运算，所以一起放在这里补充</li>
 <li>‘&lt;&lt;’运算：x&lt;&lt;num，表示x数字所表示的二进制数字整体左移num位，右边空出的位置由0补足，注意这种移位运算是有限制的，比如上面的代码中做移位运算的是int值，所以转换为二进制之后只有32位，如果有为1的位左移到了第32位，则会变成符号位，使整个数字变成负数，而移出32位之外的位也就是移出去了，不会再作为这个数字的一部分进行位运算</li>
 <li>‘&gt;&gt;’运算：x&gt;&gt;num，表示x数字的二进制数字整体右移num位，移出位的删除，左边空出的位置分两种情况，如果数字本身是正数，则用0补足，如果是负数，则用1补足</li>
 </ul>
@@ -567,6 +568,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">日常</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Android</a>
               </li>
              
@@ -576,14 +585,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">日常</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -599,19 +600,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">并发</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
               </li>
             
             <div class="clearfix"></div>
