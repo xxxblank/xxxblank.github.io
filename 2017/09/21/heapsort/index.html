@@ -8,17 +8,20 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>堆排序 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="占坑，复习博客期间发现需要补学的东西">
+  <meta name="description" content="二叉树说到堆，首先要提一下二叉树。 根据数据结构的基础知识，可以知道二叉树分为完全二叉树和满二叉树，其中满二叉树很好理解，就是一棵除了最后一层没有子结点、其余每一层的所有结点都有两个子节点的二叉树，如下图：  满二叉树的结点数是同样深度的二叉树的结点数的最大值，所有叶子结点必须在同一层上。 完全二叉树又是什么呢？其实完全二叉树是从满二叉树上衍生出来的，官方定义是对于深度为K的，有N个结点的二叉树，">
 <meta name="keywords" content="Java,数据结构">
 <meta property="og:type" content="article">
 <meta property="og:title" content="堆排序">
 <meta property="og:url" content="http://yoursite.com/2017/09/21/heapsort/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="占坑，复习博客期间发现需要补学的东西">
-<meta property="og:updated_time" content="2017-09-21T13:28:08.019Z">
+<meta property="og:description" content="二叉树说到堆，首先要提一下二叉树。 根据数据结构的基础知识，可以知道二叉树分为完全二叉树和满二叉树，其中满二叉树很好理解，就是一棵除了最后一层没有子结点、其余每一层的所有结点都有两个子节点的二叉树，如下图：  满二叉树的结点数是同样深度的二叉树的结点数的最大值，所有叶子结点必须在同一层上。 完全二叉树又是什么呢？其实完全二叉树是从满二叉树上衍生出来的，官方定义是对于深度为K的，有N个结点的二叉树，">
+<meta property="og:image" content="http://bubkoo.qiniudn.com/full%C2%A0binary%C2%A0tree.png">
+<meta property="og:image" content="http://img.blog.csdn.net/20150612143904949?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbWF3bWluZw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center">
+<meta property="og:updated_time" content="2017-09-29T10:51:12.360Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="堆排序">
-<meta name="twitter:description" content="占坑，复习博客期间发现需要补学的东西">
+<meta name="twitter:description" content="二叉树说到堆，首先要提一下二叉树。 根据数据结构的基础知识，可以知道二叉树分为完全二叉树和满二叉树，其中满二叉树很好理解，就是一棵除了最后一层没有子结点、其余每一层的所有结点都有两个子节点的二叉树，如下图：  满二叉树的结点数是同样深度的二叉树的结点数的最大值，所有叶子结点必须在同一层上。 完全二叉树又是什么呢？其实完全二叉树是从满二叉树上衍生出来的，官方定义是对于深度为K的，有N个结点的二叉树，">
+<meta name="twitter:image" content="http://bubkoo.qiniudn.com/full%C2%A0binary%C2%A0tree.png">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -184,7 +187,17 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>占坑，复习博客期间发现需要补学的东西</p>
+        <h2 id="二叉树"><a href="#二叉树" class="headerlink" title="二叉树"></a>二叉树</h2><p>说到堆，首先要提一下二叉树。</p>
+<p>根据数据结构的基础知识，可以知道二叉树分为<strong>完全二叉树</strong>和<strong>满二叉树</strong>，其中满二叉树很好理解，就是一棵除了最后一层没有子结点、其余每一层的所有结点都有两个子节点的二叉树，如下图：</p>
+<p><img src="http://bubkoo.qiniudn.com/full%C2%A0binary%C2%A0tree.png" alt="完全二叉树"></p>
+<p>满二叉树的结点数是同样深度的二叉树的结点数的最大值，所有叶子结点必须在同一层上。</p>
+<p>完全二叉树又是什么呢？其实完全二叉树是从满二叉树上衍生出来的，官方定义是<strong>对于深度为K的，有N个结点的二叉树，当且仅当其每一个结点都与深度为K的满二叉树中编号从1至n的结点一一对应时称之为完全二叉树。</strong></p>
+<p>但其实就我来说，第一遍读完全二叉树的定义是没有读懂的，所以我再把自己的理解用比较通俗的话说出来：<strong>完全二叉树就是只有最后一行没满的满二叉树，且最后一行的叶子结点都集中在左边。</strong>可以结合下图理解：</p>
+<p><img src="http://img.blog.csdn.net/20150612143904949?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbWF3bWluZw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt="完全二叉树与非完全二叉树"></p>
+<h2 id="堆"><a href="#堆" class="headerlink" title="堆"></a>堆</h2><p><strong>堆是一种特殊的树</strong>，堆和树的区别在于，树不会对元素进行排序，而堆是遵循父结点小于子结点或父结点大于子结点的特殊的树，它的根结点的值是最大或最小的。</p>
+<p>而我们平时经常提到的、以及经常应用的堆，如果不明确说明，其实都是说的<strong>二叉堆</strong>，从名字就可以看出来，二叉堆是从二叉树衍生来的，通过上面的描述我们已经知道二叉树分为满二叉树和完全二叉树，<strong>二叉堆就是一棵特殊的完全二叉树</strong>。<br>而特殊的点也就是上一段所说的，二叉堆的任意结点会全部大于或小于两个子结点，根结点会是所有结点的最大或最小值。</p>
+<p>其中，将<strong>根结点最大的堆称为最大堆或大根堆，根结点最小的堆称为最小堆或小根堆。</strong></p>
+<p>需要特别注意一下的是，由于堆是由树实现的，而我们习惯用链表来实现树，所以自然会想到用链表来实现堆，实现是可以实现的，但是更推荐用数组来实现堆，<strong>这是因为堆是完全二叉树，它每一个元素的下标都是可求的，而且堆的应用更多需要的是对元素的查找和替换，而不是元素的增加和删除，所以总体来说用数组实现堆效率更高</strong>。</p>
 
       
 
@@ -343,7 +356,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    目录，不存在的…
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#二叉树"><span class="toc-number">1.</span> <span class="toc-text">二叉树</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#堆"><span class="toc-number">2.</span> <span class="toc-text">堆</span></a></li></ol>
                     </div>
                 </span>
             </div>
@@ -453,14 +466,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Android</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">日常</a>
               </li>
              
@@ -469,15 +474,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Android</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -489,7 +494,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
+                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -498,6 +507,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
               </li>
             
             <div class="clearfix"></div>
