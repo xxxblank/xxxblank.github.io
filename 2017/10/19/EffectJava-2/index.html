@@ -6,17 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: 读书笔记 | Rirsa&#39;s Home</title>
+  <title>EffectJava笔记——toString方法和compareTo方法 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="be strong,be friends">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Rirsa&#39;s Home">
-<meta property="og:url" content="http://yoursite.com/tags/读书笔记/index.html">
+  <meta name="description" content="toString方法虽然Object本身有一个toString的实现，但toString的通用约定指出，“建议所有的子类覆盖这个方法”，我们应该通过覆盖toString方法为对象的打印提供更简洁明确的信息。">
+<meta name="keywords" content="Java,读书笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="EffectJava笔记——toString方法和compareTo方法">
+<meta property="og:url" content="http://yoursite.com/2017/10/19/EffectJava-2/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="be strong,be friends">
+<meta property="og:description" content="toString方法虽然Object本身有一个toString的实现，但toString的通用约定指出，“建议所有的子类覆盖这个方法”，我们应该通过覆盖toString方法为对象的打印提供更简洁明确的信息。">
+<meta property="og:updated_time" content="2017-10-19T13:22:01.716Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Rirsa&#39;s Home">
-<meta name="twitter:description" content="be strong,be friends">
+<meta name="twitter:title" content="EffectJava笔记——toString方法和compareTo方法">
+<meta name="twitter:description" content="toString方法虽然Object本身有一个toString的实现，但toString的通用约定指出，“建议所有的子类覆盖这个方法”，我们应该通过覆盖toString方法为对象的打印提供更简洁明确的信息。">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -162,36 +164,74 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
+            <article id="post-EffectJava-2" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
   
+    <h1 class="article-title" itemprop="name">
+      EffectJava笔记——toString方法和compareTo方法
+    </h1>
   
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/10/19/EffectJava-2/" class="archive-article-date">
+
+        
+        <a href="/2017/10/19/EffectJava-2/" class="archive-article-date">
   	<time datetime="2017-10-19T13:19:57.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-19</time>
 </a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/10/19/EffectJava-2/">EffectJava笔记——toString方法和compareTo方法</a>
-    </h1>
-  
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="toString方法"><a href="#toString方法" class="headerlink" title="toString方法"></a>toString方法</h2><p>虽然Object本身有一个toString的实现，但toString的通用约定指出，<strong>“建议所有的子类覆盖这个方法”</strong>，我们应该通过覆盖toString方法为对象的打印提供更简洁明确的信息。</p>
+<a id="more"></a>
+<p>使用toString方法时，有一个需要谨慎考虑的问题就是<strong>是否需要为返回值确定一个格式</strong>，比如为一个自定义的Date类实现一个toString方法，返回一个“yyyy-MM-dd”格式的字符串，这种方法有好有坏，好处是可以提供一个标准的、明确的、适合人阅读的对象表示法，坏处是一旦确定了格式并且被广泛使用，就必须一如既往的使用这种格式，一旦随意变动，往往会破坏使用你这个类的程序员们针对这个字符串编写的用于解析的代码。</p>
+<p>所以无论指不指定格式，最保险的是每次都在文档注释中说明你的意图。</p>
+<p>另外需要注意的是，**无论是否指定格式，都要为toString方法返回值中包含的信息提供一种编程式的访问途径，例如上面提到的自定义Date类，如果返回值是“yyyy-MM-dd”，就需要有对应的方法返回yyyy、MM和dd这三个值。</p>
+<h2 id="考虑实现Comparable接口"><a href="#考虑实现Comparable接口" class="headerlink" title="考虑实现Comparable接口"></a>考虑实现Comparable接口</h2><p>与前面提到的方法不同，Comparable接口和它的compareTo方法与object类没什么关系，但在effective java中也将它放在了对于所有对象通用方法的一章中，其实很好理解，我们实现的很多对象是需要进行排序这种需求的。而这个接口和它的方法也就是为这种需求而存在的，<strong>如果你在编写的类具有非常明显的内在排序关系，比如按字母、按数值或者按时间排序，那么就坚决应该实现这个接口。</strong></p>
+<p>就像破坏了hashCode通用约定会破坏其他依赖于散列算法的类的使用一样，如果破坏了Comparable接口的通用约定，也会破坏其他依赖于比较关系的类，比如TreeSet、TreeMap、Collections和Arrays，它们内部包含有搜索和排序算法。</p>
+<p>那么Comparable的通用约定是什么呢，其实Comparable的通用约定可以和equals相互呼应，同样要有对应比较运算的自反性、传递性、对称性，因此和equals相同，在为一个类扩展了新的值组件后，无法保证其compareTo方法的可用性和正确性。解决这个问题的权宜之计是编写一个不相关的类，用这个类包含原先的类的实例，然后用一个“视图”（View）方法返回这个实例。<strong>这样既可以在第二个类上自由的编写compareTo方法，同时也允许它的客户端在需要的时候把第二个类的实例视同第一个类的实例。</strong></p>
+<p>compareTo约定的一个<strong>强烈的建议是，如果x.compareTo(y)==0,那么同样成立x.equals(y)</strong>，这只是一个强烈的建议，因为即使compareTo方法的结果与equals不同，这个类仍然能正常工作，但是一般来说，如果你的类实现的compareTo方法与这条建议不符，还是应该给予明确的说明：”该类具有内在排序功能，但与equals不一致“。</p>
 
-        <div class="article-info info-on-right">
-          
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>有帮助的话可以给点鼓励哦<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://ww1.sinaimg.cn/large/006aoiFpgy1fii2bu1zqfj30u019jqa0.jpg">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://ww1.sinaimg.cn/large/006aoiFpgy1fii2c52suhj30yi1bcace.jpg">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -207,7 +247,7 @@
 		</ul>
 	</div>
 
-          
+      
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
@@ -220,70 +260,115 @@
 	</div>
 
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/10/19/EffectJava-2/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/10/19/effectiveJava-1/" class="archive-article-date">
-  	<time datetime="2017-10-19T11:20:38.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-19</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2017/10/19/effectiveJava-1/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">EffectiveJava笔记——equals方法与hashCode方法</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/10/19/effectiveJava-1/">EffectiveJava笔记——equals方法与hashCode方法</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">读书笔记</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#toString方法"><span class="toc-number">1.</span> <span class="toc-text">toString方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#考虑实现Comparable接口"><span class="toc-number">2.</span> <span class="toc-text">考虑实现Comparable接口</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
+        
+    </div>
+</aside>
+
+
+
   
   
-    </div></section>
   
 
-    
+  
+
+  
 
 
           </div>
@@ -306,9 +391,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
