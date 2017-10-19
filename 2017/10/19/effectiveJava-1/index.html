@@ -15,7 +15,7 @@
 <meta property="og:url" content="http://yoursite.com/2017/10/19/effectiveJava-1/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
 <meta property="og:description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为">
-<meta property="og:updated_time" content="2017-10-19T11:28:52.691Z">
+<meta property="og:updated_time" content="2017-10-19T11:31:31.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="EffectiveJava笔记——equals方法与hashCode方法">
 <meta name="twitter:description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为">
@@ -231,9 +231,8 @@
 <li>如果是float类型，计算<strong>Float.floatToIntBits(f)</strong></li>
 <li>如果是double类型同样调用<strong>double的floattolongbits，然后调用long的转换到int的步骤</strong></li>
 <li>如果是对象，调用对象的hashCode</li>
-<li>如果是数组，可调用数组的Arrays.hashcode方法<br>b. 按照下面的公式，把步骤2.a中计算得到的散列码c合并到result中：<br>result = 31*result + c;</li>
+<li>如果是数组，可调用数组的Arrays.hashcode方法<br>b. 按照下面的公式，把步骤2.a中计算得到的散列码c合并到result中：<br>result = 31<em>result + c;<br>注意，上面的两个步骤ab是对<em>*每个关键域</em></em>都要做的，即有多少个关键域，b中的result就要迭代多少次。</li>
 </ul>
-<p>注意，上面的两个步骤ab是对<strong>每个关键域</strong>都要做的，即有多少个关键域，b中的result就要迭代多少次。</p>
 <ol>
 <li>返回result</li>
 <li>测试是否相等的实例返回相同的hashCode</li>
@@ -550,11 +549,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+                <a href="javascript:void(0)" class="js-tag color3">并发</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">并发</a>
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
             
             <div class="clearfix"></div>
