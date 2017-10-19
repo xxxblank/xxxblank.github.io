@@ -15,7 +15,7 @@
 <meta property="og:url" content="http://yoursite.com/2017/10/19/effectiveJava-1/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
 <meta property="og:description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为">
-<meta property="og:updated_time" content="2017-10-19T11:25:23.137Z">
+<meta property="og:updated_time" content="2017-10-19T11:28:52.691Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="EffectiveJava笔记——equals方法与hashCode方法">
 <meta name="twitter:description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为">
@@ -222,16 +222,19 @@
 <p>好的hashcode方法实现需要一个好的散列函数，使集合中不相等的实例均匀的分布到所有可能的散列值上。想要完全达到这种理想的情形比较困难，但是有一个相对接近这种情形的解决办法：</p>
 <ol>
 <li>把一个非零的常数值保存在名为result的int类型变量中；</li>
-<li>对于对象中<strong>每个关键域（equals方法中涉及到的域）</strong>，完成以下步骤：<br> a. 为<strong>当前运算的这个域</strong>计算int类型的散列码c<pre><code>- 如果该域是Boolean类型的，则可以计算 f？1:0
-- 如果该域是byte、char、short、int类型的，计算（int）f
-- 如果该域是long类型的，计算（int）（f^（f&gt;&gt;&gt;32））
-- 如果是float类型，计算**Float.floatToIntBits(f)**
-- 如果是double类型同样调用**double的floattolongbits，然后调用long的转换到int的步骤**
-- 如果是对象，调用对象的hashCode
-- 如果是数组，可调用数组的Arrays.hashcode方法
-</code></pre> b. 按照下面的公式，把步骤2.a中计算得到的散列码c合并到result中：<pre><code>result = 31*result + c;
-注意，上面的两个步骤ab是对**每个关键域**都要做的，即有多少个关键域，b中的result就要迭代多少次。
-</code></pre></li>
+<li>对于对象中<strong>每个关键域（equals方法中涉及到的域）</strong>，完成以下步骤：<br>a. 为<strong>当前运算的这个域</strong>计算int类型的散列码c</li>
+</ol>
+<ul>
+<li>如果该域是Boolean类型的，则可以计算 f？1:0</li>
+<li>如果该域是byte、char、short、int类型的，计算（int）f</li>
+<li>如果该域是long类型的，计算（int）（f^（f&gt;&gt;&gt;32））</li>
+<li>如果是float类型，计算<strong>Float.floatToIntBits(f)</strong></li>
+<li>如果是double类型同样调用<strong>double的floattolongbits，然后调用long的转换到int的步骤</strong></li>
+<li>如果是对象，调用对象的hashCode</li>
+<li>如果是数组，可调用数组的Arrays.hashcode方法<br>b. 按照下面的公式，把步骤2.a中计算得到的散列码c合并到result中：<br>result = 31*result + c;</li>
+</ul>
+<p>注意，上面的两个步骤ab是对<strong>每个关键域</strong>都要做的，即有多少个关键域，b中的result就要迭代多少次。</p>
+<ol>
 <li>返回result</li>
 <li>测试是否相等的实例返回相同的hashCode</li>
 </ol>
@@ -511,14 +514,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">源码</a>
               </li>
              
@@ -528,6 +523,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">杂记</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -547,11 +550,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">并发</a>
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+                <a href="javascript:void(0)" class="js-tag color3">并发</a>
               </li>
             
             <div class="clearfix"></div>
