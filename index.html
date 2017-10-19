@@ -164,6 +164,143 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-effectiveJava-1" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/10/19/effectiveJava-1/">EffectiveJava笔记——equals方法与hashCode方法</a>
+    </h1>
+  
+
+        
+        <a href="/2017/10/19/effectiveJava-1/" class="archive-article-date">
+  	<time datetime="2017-10-19T11:20:38.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-19</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本章主要内容是讲述<strong>Object类的可覆盖方法的通用规则</strong>，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。</p>
+<h2 id="equals方法"><a href="#equals方法" class="headerlink" title="equals方法"></a>equals方法</h2><p>如果类有<strong>不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为</strong>的时候，我们需要覆盖equals方法，通过在equals方法中重写对类对象中某个或某些指定值的大小比较来进行是否equals的判断。</p>
+<p>下面是覆盖equals时要遵守的约定的内容：</p>
+<ul>
+<li>自反性。对于任何非null的引用值x，x.equals(x)必须返回true；</li>
+<li>对称性。对于任何非null的引用值x和y，当且仅当y.equals(x)返回true时，x.equals(y)必须返回true；</li>
+<li>传递性。对于任何非null的引用值x，y，z，如果x.equals(y)返回true，y.equals(z)返回true，那么x.equals(z)也返回true；</li>
+<li>一致性。对于任何非null的引用值x和y，只要equals的比较操作在对象中所用的信息没有被修改，多次调用x.equals(y)就会一致的返回true或false；</li>
+<li>对于任何非null的引用值x，x.equals(null)必须返回false。</li>
+</ul>
+<p>其中自反性、一致性一般情况来说很难违反，需要注意后面这几个约定。</p>
+<h3 id="对称性"><a href="#对称性" class="headerlink" title="对称性"></a>对称性</h3><p>这个约定违反的情况也不多，但是也存在，比如想强行将两个不同的类进行equals操作，如果两个类都能对equals进行重写还有可行性，若是其中一个类是String这种无法修改的系统类，就会出现只有一个方向可以equals，对称过来就会返回false的情况，继而违反对称性。</p>
+<h3 id="传递性"><a href="#传递性" class="headerlink" title="传递性"></a>传递性</h3><p>这个约定比较需要注意，因为无意识违反传递性的可能相比前两个要大很多。</p>
+<p>典型的情况是父类重写了equals方法，子类扩展父类时增加了一个新的值组件，对子类的对象的equals操作就需要再增加对这个新的值组件的比较，那么父类对象与子类对象进行equals操作时，要么会违反对称性，要么会违反传递性，没有十分万全的方法可以解决这个问题。</p>
+<p>书上有提到说有种方法是用getClass测试代替instanceof测试，来在equals方法中判断两个对象是否相同，这个方法的缺点是<strong>不论是否对传入的类进行了统一的向上转型，getClass获取的class都是转型之前的子类class</strong>，所以如果有需求是equals方法判断父类对象和子类对象只需要比较父类中存在的值组件的大小，那么如果用getClass来判断，即使两个对象的逻辑值相等也会返回false，相对来说还是用instanceof更合理。</p>
+<h3 id="非空性（书中命名）"><a href="#非空性（书中命名）" class="headerlink" title="非空性（书中命名）"></a>非空性（书中命名）</h3><p>最后一条性质，没什么好说的，但是有一个书中提及的小技巧，<strong>我们不需要在equals方法里进行专门的判空操作。</strong></p>
+<p>为了值比较时的参数等同性，equals方法必须先把传入的object对象通过instanceof进行判断，而instanceof本身就有如果前操作数为null则直接返回false的特性，所以不需要再单独进行判空测试。</p>
+<h3 id="诀窍"><a href="#诀窍" class="headerlink" title="诀窍"></a>诀窍</h3><p>综上所述，有以下实现高质量equals方法的诀窍：</p>
+<ul>
+<li>使用==判断传入的object是否为当前对象本身，如果是则直接返回true；</li>
+<li>使用instanceof判断传入的对象是否为正确的类型，不是则直接返回false；</li>
+<li>是正确的类型，则转换为正确的类型；</li>
+<li>对于要比较的关键值一一进行比较。这里要说明的是，<strong>对于不是float和double的基本数据类型的比较可以直接用==进行，对于对象可以递归调用对象的equals方法，而对于float或double类型的数据，要调用Float或Double类对应的compare方法进行比较。</strong></li>
+<li>编写完成equals方法之后，要对对称性、传递性、一致性等五个约定进行测试.</li>
+</ul>
+<h3 id="最后的提醒"><a href="#最后的提醒" class="headerlink" title="最后的提醒"></a>最后的提醒</h3><ul>
+<li>覆盖equals方法时总要覆盖hashCode</li>
+<li>不要让equals方法过于智能，过于寻求各种等价关系往往会陷入各种麻烦之中</li>
+<li>不要将equals声明中的Object参数改成其他类型</li>
+</ul>
+<h2 id="hashCode方法"><a href="#hashCode方法" class="headerlink" title="hashCode方法"></a>hashCode方法</h2><blockquote>
+<p>在每个覆盖了equals方法的类中，也<strong>必须覆盖hashCode方法</strong>。如果不这样做，就会违反hashCode的通用约定，从而使该类无法结合所有基于散列的集合一起正常的工作，这样的集合包括HashMap、HashSet和HashTable。</p>
+</blockquote>
+<p>好的hashcode方法实现需要一个好的散列函数，使集合中不相等的实例均匀的分布到所有可能的散列值上。想要完全达到这种理想的情形比较困难，但是有一个相对接近这种情形的解决办法：</p>
+<ol>
+<li>把一个非零的常数值保存在名为result的int类型变量中；</li>
+<li>对于对象中<strong>每个关键域（equals方法中涉及到的域）</strong>，完成以下步骤：<br> a. 为<strong>当前运算的这个域</strong>计算int类型的散列码c<pre><code>- 如果该域是Boolean类型的，则可以计算 f？1:0
+- 如果该域是byte、char、short、int类型的，计算（int）f
+- 如果该域是long类型的，计算（int）（f^（f&gt;&gt;&gt;32））
+- 如果是float类型，计算**Float.floatToIntBits(f)**
+- 如果是double类型同样调用**double的floattolongbits，然后调用long的转换到int的步骤**
+- 如果是对象，调用对象的hashCode
+- 如果是数组，可调用数组的Arrays.hashcode方法
+</code></pre> b. 按照下面的公式，把步骤2.a中计算得到的散列码c合并到result中：<pre><code>result = 31*result + c;
+注意，上面的两个步骤ab是对**每个关键域**都要做的，即有多少个关键域，b中的result就要迭代多少次。
+</code></pre></li>
+<li>返回result</li>
+<li>测试是否相等的实例返回相同的hashCode</li>
+</ol>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">数据结构</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2017/10/19/effectiveJava-1/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-heapsort" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -488,15 +625,15 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">并发</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
         		</li>
       		
 		</ul>
@@ -583,15 +720,15 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">并发</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
         		</li>
       		
 		</ul>
@@ -1018,102 +1155,6 @@
 
 
   
-    <article id="post-EventBus-third" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/07/25/EventBus-third/">EventBus使用与分析三（源码分析之注册）</a>
-    </h1>
-  
-
-        
-        <a href="/2017/07/25/EventBus-third/" class="archive-article-date">
-  	<time datetime="2017-07-25T10:06:32.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-25</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>前面学习了EventBus3.0的基本用法和发送黏性事件等，然而目前为止我们都是只知其然不知其所以然，出于刨根问底的好习惯，我们来详解一下EventBus的源码。</p>
-<p>看源码就像拆线球，要先找到一个线头，然后顺着将整条线拉出来。这一次我们就按着EventBus的基本使用来看源码，
-        
-          <a class="article-more-a" href="/2017/07/25/EventBus-third/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">EventBus</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2017/07/25/EventBus-third/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
@@ -1211,31 +1252,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Android</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">日常</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">杂记</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Android</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1247,7 +1276,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
+                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1256,6 +1289,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">并发</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
               </li>
             
             <div class="clearfix"></div>

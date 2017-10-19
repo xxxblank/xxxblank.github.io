@@ -6,17 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: 杂记 | Rirsa&#39;s Home</title>
+  <title>EffectiveJava笔记——equals方法与hashCode方法 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="be strong,be friends">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Rirsa&#39;s Home">
-<meta property="og:url" content="http://yoursite.com/tags/杂记/index.html">
+  <meta name="description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为的时候，我们需要覆盖equals方法，通过在equals方">
+<meta name="keywords" content="Java,数据结构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="EffectiveJava笔记——equals方法与hashCode方法">
+<meta property="og:url" content="http://yoursite.com/2017/10/19/effectiveJava-1/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="be strong,be friends">
+<meta property="og:description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为的时候，我们需要覆盖equals方法，通过在equals方">
+<meta property="og:updated_time" content="2017-10-19T11:23:21.882Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Rirsa&#39;s Home">
-<meta name="twitter:description" content="be strong,be friends">
+<meta name="twitter:title" content="EffectiveJava笔记——equals方法与hashCode方法">
+<meta name="twitter:description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为的时候，我们需要覆盖equals方法，通过在equals方">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -162,97 +164,118 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-effectiveJava-1" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/09/13/TODOLIST/" class="archive-article-date">
-  	<time datetime="2017-09-13T09:33:06.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-09-13</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/09/13/TODOLIST/">TODOLIST</a>
+    <h1 class="article-title" itemprop="name">
+      EffectiveJava笔记——equals方法与hashCode方法
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2017/10/19/effectiveJava-1/" class="archive-article-date">
+  	<time datetime="2017-10-19T11:20:38.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-19</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本章主要内容是讲述<strong>Object类的可覆盖方法的通用规则</strong>，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。</p>
+<h2 id="equals方法"><a href="#equals方法" class="headerlink" title="equals方法"></a>equals方法</h2><p>如果类有<strong>不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为</strong>的时候，我们需要覆盖equals方法，通过在equals方法中重写对类对象中某个或某些指定值的大小比较来进行是否equals的判断。</p>
+<p>下面是覆盖equals时要遵守的约定的内容：</p>
+<ul>
+<li>自反性。对于任何非null的引用值x，x.equals(x)必须返回true；</li>
+<li>对称性。对于任何非null的引用值x和y，当且仅当y.equals(x)返回true时，x.equals(y)必须返回true；</li>
+<li>传递性。对于任何非null的引用值x，y，z，如果x.equals(y)返回true，y.equals(z)返回true，那么x.equals(z)也返回true；</li>
+<li>一致性。对于任何非null的引用值x和y，只要equals的比较操作在对象中所用的信息没有被修改，多次调用x.equals(y)就会一致的返回true或false；</li>
+<li>对于任何非null的引用值x，x.equals(null)必须返回false。</li>
+</ul>
+<p>其中自反性、一致性一般情况来说很难违反，需要注意后面这几个约定。</p>
+<h3 id="对称性"><a href="#对称性" class="headerlink" title="对称性"></a>对称性</h3><p>这个约定违反的情况也不多，但是也存在，比如想强行将两个不同的类进行equals操作，如果两个类都能对equals进行重写还有可行性，若是其中一个类是String这种无法修改的系统类，就会出现只有一个方向可以equals，对称过来就会返回false的情况，继而违反对称性。</p>
+<h3 id="传递性"><a href="#传递性" class="headerlink" title="传递性"></a>传递性</h3><p>这个约定比较需要注意，因为无意识违反传递性的可能相比前两个要大很多。</p>
+<p>典型的情况是父类重写了equals方法，子类扩展父类时增加了一个新的值组件，对子类的对象的equals操作就需要再增加对这个新的值组件的比较，那么父类对象与子类对象进行equals操作时，要么会违反对称性，要么会违反传递性，没有十分万全的方法可以解决这个问题。</p>
+<p>书上有提到说有种方法是用getClass测试代替instanceof测试，来在equals方法中判断两个对象是否相同，这个方法的缺点是<strong>不论是否对传入的类进行了统一的向上转型，getClass获取的class都是转型之前的子类class</strong>，所以如果有需求是equals方法判断父类对象和子类对象只需要比较父类中存在的值组件的大小，那么如果用getClass来判断，即使两个对象的逻辑值相等也会返回false，相对来说还是用instanceof更合理。</p>
+<h3 id="非空性（书中命名）"><a href="#非空性（书中命名）" class="headerlink" title="非空性（书中命名）"></a>非空性（书中命名）</h3><p>最后一条性质，没什么好说的，但是有一个书中提及的小技巧，<strong>我们不需要在equals方法里进行专门的判空操作。</strong></p>
+<p>为了值比较时的参数等同性，equals方法必须先把传入的object对象通过instanceof进行判断，而instanceof本身就有如果前操作数为null则直接返回false的特性，所以不需要再单独进行判空测试。</p>
+<h3 id="诀窍"><a href="#诀窍" class="headerlink" title="诀窍"></a>诀窍</h3><p>综上所述，有以下实现高质量equals方法的诀窍：</p>
+<ul>
+<li>使用==判断传入的object是否为当前对象本身，如果是则直接返回true；</li>
+<li>使用instanceof判断传入的对象是否为正确的类型，不是则直接返回false；</li>
+<li>是正确的类型，则转换为正确的类型；</li>
+<li>对于要比较的关键值一一进行比较。这里要说明的是，<strong>对于不是float和double的基本数据类型的比较可以直接用==进行，对于对象可以递归调用对象的equals方法，而对于float或double类型的数据，要调用Float或Double类对应的compare方法进行比较。</strong></li>
+<li>编写完成equals方法之后，要对对称性、传递性、一致性等五个约定进行测试.</li>
+</ul>
+<h3 id="最后的提醒"><a href="#最后的提醒" class="headerlink" title="最后的提醒"></a>最后的提醒</h3><ul>
+<li>覆盖equals方法时总要覆盖hashCode</li>
+<li>不要让equals方法过于智能，过于寻求各种等价关系往往会陷入各种麻烦之中</li>
+<li>不要将equals声明中的Object参数改成其他类型</li>
+</ul>
+<h2 id="hashCode方法"><a href="#hashCode方法" class="headerlink" title="hashCode方法"></a>hashCode方法</h2><blockquote>
+<p>在每个覆盖了equals方法的类中，也<strong>必须覆盖hashCode方法</strong>。如果不这样做，就会违反hashCode的通用约定，从而使该类无法结合所有基于散列的集合一起正常的工作，这样的集合包括HashMap、HashSet和HashTable。</p>
+</blockquote>
+<p>好的hashcode方法实现需要一个好的散列函数，使集合中不相等的实例均匀的分布到所有可能的散列值上。想要完全达到这种理想的情形比较困难，但是有一个相对接近这种情形的解决办法：</p>
+<ol>
+<li>把一个非零的常数值保存在名为result的int类型变量中；</li>
+<li>对于对象中<strong>每个关键域（equals方法中涉及到的域）</strong>，完成以下步骤：<br> a. 为<strong>当前运算的这个域</strong>计算int类型的散列码c<pre><code>- 如果该域是Boolean类型的，则可以计算 f？1:0
+- 如果该域是byte、char、short、int类型的，计算（int）f
+- 如果该域是long类型的，计算（int）（f^（f&gt;&gt;&gt;32））
+- 如果是float类型，计算**Float.floatToIntBits(f)**
+- 如果是double类型同样调用**double的floattolongbits，然后调用long的转换到int的步骤**
+- 如果是对象，调用对象的hashCode
+- 如果是数组，可调用数组的Arrays.hashcode方法
+</code></pre> b. 按照下面的公式，把步骤2.a中计算得到的散列码c合并到result中：<pre><code>result = 31*result + c;
+注意，上面的两个步骤ab是对**每个关键域**都要做的，即有多少个关键域，b中的result就要迭代多少次。
+</code></pre></li>
+<li>返回result</li>
+<li>测试是否相等的实例返回相同的hashCode</li>
+</ol>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>有帮助的话可以给点鼓励哦<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://ww1.sinaimg.cn/large/006aoiFpgy1fii2bu1zqfj30u019jqa0.jpg">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://ww1.sinaimg.cn/large/006aoiFpgy1fii2c52suhj30yi1bcace.jpg">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">日常</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">杂记</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/杂记/" class="article-tag-list-link color3">杂记</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/08/15/deque/" class="archive-article-date">
-  	<time datetime="2017-08-15T10:44:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-15</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/08/15/deque/">实现栈和队列推荐使用的ArrayDeque</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">杂记</a>
-        		</li>
-      		 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
@@ -264,30 +287,128 @@
 		</ul>
 	</div>
 
-          
+      
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="/categories/杂记/" class="article-tag-list-link color3">杂记</a>
+        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
         		</li>
       		
 		</ul>
 	</div>
 
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/10/19/effectiveJava-1/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2017/09/21/heapsort/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">堆排序</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#equals方法"><span class="toc-number">1.</span> <span class="toc-text">equals方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#对称性"><span class="toc-number">1.1.</span> <span class="toc-text">对称性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#传递性"><span class="toc-number">1.2.</span> <span class="toc-text">传递性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#非空性（书中命名）"><span class="toc-number">1.3.</span> <span class="toc-text">非空性（书中命名）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#诀窍"><span class="toc-number">1.4.</span> <span class="toc-text">诀窍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#最后的提醒"><span class="toc-number">1.5.</span> <span class="toc-text">最后的提醒</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#hashCode方法"><span class="toc-number">2.</span> <span class="toc-text">hashCode方法</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
 
 
           </div>
@@ -310,9 +431,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
