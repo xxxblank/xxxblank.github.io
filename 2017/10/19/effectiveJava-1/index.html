@@ -8,17 +8,17 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>EffectiveJava笔记——equals方法与hashCode方法 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为的时候，我们需要覆盖equals方法，通过在equals方">
-<meta name="keywords" content="Java,数据结构">
+  <meta name="description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为">
+<meta name="keywords" content="Java,读书笔记">
 <meta property="og:type" content="article">
 <meta property="og:title" content="EffectiveJava笔记——equals方法与hashCode方法">
 <meta property="og:url" content="http://yoursite.com/2017/10/19/effectiveJava-1/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为的时候，我们需要覆盖equals方法，通过在equals方">
-<meta property="og:updated_time" content="2017-10-19T11:23:21.882Z">
+<meta property="og:description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为">
+<meta property="og:updated_time" content="2017-10-19T11:25:23.137Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="EffectiveJava笔记——equals方法与hashCode方法">
-<meta name="twitter:description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为的时候，我们需要覆盖equals方法，通过在equals方">
+<meta name="twitter:description" content="本章主要内容是讲述Object类的可覆盖方法的通用规则，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。 equals方法如果类有不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -185,7 +185,9 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>本章主要内容是讲述<strong>Object类的可覆盖方法的通用规则</strong>，即equals、hashCode、toString、clone和finalize方法的使用规则，其中finalize方法在上一章已经讲述，所以本章主要讲另外四个方法的使用规则。</p>
-<h2 id="equals方法"><a href="#equals方法" class="headerlink" title="equals方法"></a>equals方法</h2><p>如果类有<strong>不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为</strong>的时候，我们需要覆盖equals方法，通过在equals方法中重写对类对象中某个或某些指定值的大小比较来进行是否equals的判断。</p>
+<h2 id="equals方法"><a href="#equals方法" class="headerlink" title="equals方法"></a>equals方法</h2><p>如果类有<strong>不同于对象相等、而是逻辑相等的概念，并且超类没有覆盖equals实现当前类期望的行为</strong></p>
+<a id="more"></a>
+<p>的时候，我们需要覆盖equals方法，通过在equals方法中重写对类对象中某个或某些指定值的大小比较来进行是否equals的判断。</p>
 <p>下面是覆盖equals时要遵守的约定的内容：</p>
 <ul>
 <li>自反性。对于任何非null的引用值x，x.equals(x)必须返回true；</li>
@@ -281,7 +283,7 @@
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">数据结构</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">读书笔记</a>
         		</li>
       		
 		</ul>
@@ -501,27 +503,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">日常</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Android</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">Java</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -533,7 +519,31 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">日常</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -541,11 +551,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
             
             <div class="clearfix"></div>
