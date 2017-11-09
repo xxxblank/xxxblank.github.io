@@ -171,7 +171,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2017/11/06/java核心技术卷笔记/">javaOrdinary</a>
+      <a class="article-title" href="/2017/11/06/java核心技术卷笔记/">java核心技术卷</a>
     </h1>
   
 
@@ -184,8 +184,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>[TOC]</p>
-<h2 id="基本知识"><a href="#基本知识" class="headerlink" title="基本知识"></a>基本知识</h2><h3 id="java的基本数据类型"><a href="#java的基本数据类型" class="headerlink" title="java的基本数据类型"></a>java的基本数据类型</h3><p>java中包含8种基本类型，其中包括4种整型、两种浮点型、一种Unicode编码类型char。</p>
+        <h2 id="基本知识"><a href="#基本知识" class="headerlink" title="基本知识"></a>基本知识</h2><h3 id="java的基本数据类型"><a href="#java的基本数据类型" class="headerlink" title="java的基本数据类型"></a>java的基本数据类型</h3><p>java中包含8种基本类型，其中包括4种整型、两种浮点型、一种Unicode编码类型char。</p>
 <p>byte，char，short，int，long，float，double，boolean</p>
 <p>其中部分类型的字节与所需位数如下</p>
 <hr>
@@ -197,25 +196,10 @@
 <p>float       4        32</p>
 <p>double   8        64</p>
 <hr>
-<p>其中float和double虽然以单精度和双精度表示浮点数，但是对这两个基本类型对浮点数的表示都不是很准确，典型的比如这两种基本类型对0.1就无法精确表示，<strong>所以如果我们要进行对精度要求很高的计算（如商业上对金钱的计算），则要改用BigDecimal进行计算。</strong></p>
-<p>另外，对浮点数的计算也经常会出现下面的三个值：</p>
-<ul>
-<li>正无穷大</li>
-<li>负无穷大</li>
-<li>NaN</li>
-</ul>
-<p>它们分别对应Float和Double类的POSITIVE_INFINITY、NEGATIVE_INFINITY、NaN常量。而判断一个式子是否等于这三个值，<strong>不能出现x==NaN这种判断，而是要使用Float和Double类中对应的isInfinite（）、isNaN（）方法。</strong></p>
-<p>关于char类型，char是用utf-16编码描述的一个代码单元，在utf-16中，由于16位长度只能表示65536个字符，所以就默认映射所有在BMP范围内的字符，这也是我们平时多数使用的char，而有些汉文生僻字在BMP范围之外，如果要表示这些生僻字，就需要使用<strong>增补字符</strong>，即出现了两个字节表示的char。比如下面的代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">String x = <span class="string">"我喜欢\uD834\uDF06这个字符"</span>;</div><div class="line">System.out.println(x);</div><div class="line">System.out.println(x.codePointCount(<span class="number">0</span>,x.length())+<span class="string">"  "</span>+x.length()+<span class="string">" "</span>+ x.charAt(<span class="number">3</span>)+<span class="string">" "</span>+x.charAt(<span class="number">4</span>));</div></pre></td></tr></table></figure>
-<p>其中\uD834\uDF06其实是字符𝌆，由于这个字符不再BMP范围内，\uD834是作为增补字符存在的。</p>
-<p>那么运行这个程序的结果如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">我喜欢𝌆这个字符</div><div class="line"><span class="number">8</span>  <span class="number">9</span> ? ?</div></pre></td></tr></table></figure>
-<p>所以可以看到对这个字符串，字符串中的代码点总数和字符串的长度已经不一样了，<strong>字符串长度将增补字符也算作了一个字符，而代码点总数将增补字符和后面的Unicode码算作同一个代码点的两部分，更危险的是如果此时使用charAt方法获取第3第4个字符，则两个都是作为char未识别的？字符。</strong></p>
-<p>所以说，char的使用有一定的局限性，如果需要使用char的时候，需要谨慎的考虑。</p>
-<h3 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h3><p>变量名命名只能用<strong>数字、字母、美元符号和下划线</strong>，<strong>可以</strong>使用字母、$、下划线开头，但是<strong>惯例是使用字母开头。不能使用数字开头。</strong></p>
-<h3 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h3><p>每一个字符串String对象都是不可变的，所以如果出现循环赋值字符串的语句，则使用String会占用很大的资源，效率也会很低，所以java推出了StringBuffer和StringBuilder类。</p>
-<p>两个类实现的方法相同，<strong>StringBuffer推出的比较早，实现了线程安全</strong>，可以被多个线程访问，但是与此对应，它的效率偏低。由于大多数需要进行很多字符串赋值的需求在同一个线程中进行，所以java在1.5中推出StringBuilder类，<strong>StringBuilder是线程不安全的，但是效率很高，由于我们一般都是在单线程中进行字符串编辑，所以一般我们都是用StringBuilder类。</strong></p>
-<h3 id="输入输出"><a href="#输入输出" class="headerlink" title="输入输出"></a>输入输出</h3>
+<p>其中float和double虽然以单精度和双精度表示浮点数，但是对这两个基本类型对浮点数的表示都不是很</p>
+        
+          <a class="article-more-a" href="/2017/11/06/java核心技术卷笔记/#more">more >></a>
+        
       
 
       
@@ -1229,15 +1213,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Android</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1249,11 +1233,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">基础</a>
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">基础</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1261,15 +1249,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">并发</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
             
             <div class="clearfix"></div>
