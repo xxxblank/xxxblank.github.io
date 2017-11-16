@@ -15,7 +15,7 @@
 <meta property="og:url" content="http://yoursite.com/2017/11/06/java核心技术卷笔记/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
 <meta property="og:description" content="基本知识[TOC] java的基本数据类型java中包含8种基本类型，其中包括4种整型、两种浮点型、一种Unicode编码类型char。">
-<meta property="og:updated_time" content="2017-11-09T12:27:30.323Z">
+<meta property="og:updated_time" content="2017-11-14T16:02:51.832Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="java核心技术卷笔记一">
 <meta name="twitter:description" content="基本知识[TOC] java的基本数据类型java中包含8种基本类型，其中包括4种整型、两种浮点型、一种Unicode编码类型char。">
@@ -235,7 +235,7 @@
 <p>获取Class对象主要有三种方式：</p>
 <ul>
 <li>实例对象直接调用Object类的getClass方法</li>
-<li>通过Class.forname(className) 参数传入带完整报名的类名，即可获得该类的Class对象</li>
+<li>通过Class.forname(className) 参数传入带完整包名的类名，即可获得该类的Class对象</li>
 <li>对任意T类型，T.class即可获得该类的Class对象</li>
 </ul>
 <p>示例如下：</p>
@@ -244,6 +244,8 @@
 <p>Example.Reject</p>
 <p>Example.Reject</p>
 <p>Example.Reject</p>
+<p>可见对应输出的都是同一个Class对象。还有一个很有用的方法newInstance()，这是一个Class类的方法，一个类的Class对象可以通过newInstance方法获得该类的实例对象。需要注意的是<strong>这个方法调用的是默认的无参数的构造函数来初始化对象</strong>，所以如果这个类没有默认的构造函数就会抛出一个异常。</p>
+<p>如果需要使用可以传入参数的构造函数，就不要用这个方法来创建实例，而是用Constructor类中的newInstance方法来创建实例。</p>
 
       
 
@@ -532,6 +534,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
               </li>
              
@@ -540,11 +546,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">并发</a>
+                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -552,15 +558,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
+                <a href="javascript:void(0)" class="js-tag color3">并发</a>
               </li>
              
               <li class="article-tag-list-item">
