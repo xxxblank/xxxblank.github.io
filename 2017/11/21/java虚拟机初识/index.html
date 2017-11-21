@@ -6,17 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives | Rirsa&#39;s Home</title>
+  <title>java虚拟机初识 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="be strong,be friends">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Rirsa&#39;s Home">
-<meta property="og:url" content="http://yoursite.com/archives/page/2/index.html">
+  <meta name="description" content="java虚拟机初识与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对J">
+<meta name="keywords" content="Java,读书笔记,JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java虚拟机初识">
+<meta property="og:url" content="http://yoursite.com/2017/11/21/java虚拟机初识/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="be strong,be friends">
+<meta property="og:description" content="java虚拟机初识与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对J">
+<meta property="og:updated_time" content="2017-11-20T14:16:33.705Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Rirsa&#39;s Home">
-<meta name="twitter:description" content="be strong,be friends">
+<meta name="twitter:title" content="java虚拟机初识">
+<meta name="twitter:description" content="java虚拟机初识与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对J">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -162,56 +164,88 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-java虚拟机初识" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      java虚拟机初识
+    </h1>
+  
+
+        
+        <a href="/2017/11/21/java虚拟机初识/" class="archive-article-date">
+  	<time datetime="2017-11-21T13:38:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-11-21</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="java虚拟机初识"><a href="#java虚拟机初识" class="headerlink" title="java虚拟机初识"></a>java虚拟机初识</h1><p>与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。</p>
+<p>但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。</p>
+<p>本篇博客即为我对JVM学习理解的整理，也是作为对《深入理解java虚拟机》一书的读书笔记了。</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>有帮助的话可以给点鼓励哦<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://ww1.sinaimg.cn/large/006aoiFpgy1fii2bu1zqfj30u019jqa0.jpg">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://ww1.sinaimg.cn/large/006aoiFpgy1fii2c52suhj30yi1bcace.jpg">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/08/11/message/" class="archive-article-date">
-  	<time datetime="2017-08-11T09:13:11.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-11</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/08/11/message/">消息处理机制</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">读书笔记</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">消息处理机制</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">JVM</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
@@ -224,240 +258,114 @@
 	</div>
 
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/11/21/java虚拟机初识/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/08/03/Picasso-1/" class="archive-article-date">
-  	<time datetime="2017-08-03T02:52:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-03</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2017/11/06/java核心技术卷笔记/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">java核心技术卷基础拾遗</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/08/03/Picasso-1/">Picasso解析一（基本使用）</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Picasso</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">图片加载框架</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#java虚拟机初识"><span class="toc-number">1.</span> <span class="toc-text">java虚拟机初识</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/07/25/EventBus-third/" class="archive-article-date">
-  	<time datetime="2017-07-25T10:06:32.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-25</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/07/25/EventBus-third/">EventBus使用与分析三（源码分析之注册）</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">EventBus</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/07/20/EventBus2/" class="archive-article-date">
-  	<time datetime="2017-07-20T08:53:58.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-20</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/07/20/EventBus2/">EventBus使用与解析二（黏性事件）</a>
-    </h1>
-  
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">EventBus</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/07/19/eventBus/" class="archive-article-date">
-  	<time datetime="2017-07-19T10:40:41.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-07-19</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/07/19/eventBus/">EventBus的使用和解析一</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">EventBus</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/archives/">&laquo; Prev</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span>
-    </nav>
+  
+
   
 
 
@@ -481,8 +389,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
