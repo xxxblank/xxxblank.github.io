@@ -8,17 +8,17 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>java虚拟机初识 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="java虚拟机初识与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对J">
+  <meta name="description" content="与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对JVM学习理解的整理">
 <meta name="keywords" content="Java,读书笔记,JVM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="java虚拟机初识">
 <meta property="og:url" content="http://yoursite.com/2017/11/21/java虚拟机初识/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="java虚拟机初识与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对J">
-<meta property="og:updated_time" content="2017-11-20T14:16:33.705Z">
+<meta property="og:description" content="与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对JVM学习理解的整理">
+<meta property="og:updated_time" content="2017-11-21T14:58:23.966Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="java虚拟机初识">
-<meta name="twitter:description" content="java虚拟机初识与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对J">
+<meta name="twitter:description" content="与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对JVM学习理解的整理">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -184,7 +184,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="java虚拟机初识"><a href="#java虚拟机初识" class="headerlink" title="java虚拟机初识"></a>java虚拟机初识</h1><p>与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。</p>
+        <p>与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。</p>
 <p>但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。</p>
 <p>本篇博客即为我对JVM学习理解的整理，也是作为对《深入理解java虚拟机》一书的读书笔记了。</p>
 
@@ -349,7 +349,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#java虚拟机初识"><span class="toc-number">1.</span> <span class="toc-text">java虚拟机初识</span></a></li></ol>
+                    目录，不存在的…
                     </div>
                 </span>
             </div>
@@ -507,11 +507,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">并发</a>
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+                <a href="javascript:void(0)" class="js-tag color3">并发</a>
               </li>
             
             <div class="clearfix"></div>
