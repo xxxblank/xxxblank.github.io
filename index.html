@@ -187,32 +187,9 @@
         <p>[TOC]</p>
 <h2 id="输出输入"><a href="#输出输入" class="headerlink" title="输出输入"></a>输出输入</h2><p>print()函数进行输出，示例：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line">//普通输出</div><div class="line">print(<span class="string">"hhh"</span>)</div><div class="line">print(<span class="number">3</span>)</div><div class="line">print(<span class="keyword">True</span>)</div><div class="line"></div><div class="line">//输出变量</div><div class="line">a=<span class="string">"daf"</span></div><div class="line">print(a)</div><div class="line">a=<span class="number">1</span></div><div class="line">print(a)</div><div class="line">a=<span class="keyword">True</span></div><div class="line">print(a)</div><div class="line"></div><div class="line">//输出格式化字符串</div><div class="line">a = <span class="string">"daming"</span></div><div class="line">print(<span class="string">"hello %s"</span>%a)</div><div class="line">b = <span class="number">12</span></div><div class="line">print(<span class="string">"hello,%s,are you %d years old?"</span>%(a,b))</div><div class="line"></div><div class="line">//拼接输出</div><div class="line">print(<span class="string">"aaa"</span>,<span class="string">"bbb"</span>) //输出aaa bbb</div><div class="line">print(<span class="string">"aaa"</span>+<span class="string">"bbb"</span>) //输出aaabbb</div><div class="line">print(<span class="string">"aaa"</span>,<span class="number">456</span>) //输出aaa <span class="number">456</span></div></pre></td></tr></table></figure>
-<p>这里要注意的是，<strong>不能用+对字符串和数字进行拼接操作，如果将代码写为print(“aaa”+456)会报错</strong>，字符串无法通过+和整数进行拼接。</p>
-<p>input()函数进行输入，示例如下：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">a = input()</div><div class="line">print(a)</div></pre></td></tr></table></figure>
-<h2 id="各种语句"><a href="#各种语句" class="headerlink" title="各种语句"></a>各种语句</h2><h3 id="if语句"><a href="#if语句" class="headerlink" title="if语句"></a>if语句</h3><p>if语句示例：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">a = input()</div><div class="line">print(bool(a))</div><div class="line"><span class="keyword">if</span> a:</div><div class="line">    print(<span class="string">"this is true"</span>)</div><div class="line"><span class="keyword">else</span>:</div><div class="line">    print(<span class="string">"this is false"</span>)</div></pre></td></tr></table></figure>
-<p>上面的语句运行后，输入任何语句都会输出this is true，只有不输入任何数据直接回车才会输出this is false。</p>
-<p>这是因为在python3中，<strong>只有空输入和数字0可以被转型为false的bool类型，空输入可以直接作为false使用，数字0只有在转型为bool型后才可以当false用。</strong></p>
-<p>注意if条件没有括号，条件后有冒号，else后面也有冒号。</p>
-<h3 id="while语句"><a href="#while语句" class="headerlink" title="while语句"></a>while语句</h3><p>上面的程序每次测试输入a的结果都要重新运行，有了while语句后我们可以这样改进：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">a = input()</div><div class="line"><span class="keyword">while</span> a:</div><div class="line">    print(a)</div><div class="line">    <span class="keyword">if</span> a:</div><div class="line">        print(<span class="string">"this is true"</span>)</div><div class="line">    <span class="keyword">else</span>:</div><div class="line">        print(<span class="string">"this is false"</span>)</div><div class="line">    a = input()</div></pre></td></tr></table></figure>
-<p>运行结果是</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="number">0</span></div><div class="line"><span class="number">0</span></div><div class="line">this <span class="keyword">is</span> true</div><div class="line"><span class="keyword">False</span></div><div class="line"><span class="keyword">False</span></div><div class="line">this <span class="keyword">is</span> true</div><div class="line">sdfa</div><div class="line">sdfa</div><div class="line">this <span class="keyword">is</span> true</div></pre></td></tr></table></figure>
-<p>最后一行是没有输入直接回车，可以看到while循环的条件被打破 ，即判断a为false，结束了程序，也就证明了我们上面说到的空输入可以作为false使用。</p>
-<p>同样注意while的使用也是条件跟在while后面，同时条件后面加冒号。</p>
-<h3 id="for语句"><a href="#for语句" class="headerlink" title="for语句"></a>for语句</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">a = input()</div><div class="line"><span class="keyword">for</span> a <span class="keyword">in</span> range(<span class="number">0</span>,<span class="number">10</span>):</div><div class="line">    print(a)</div><div class="line">    </div><div class="line">//输入输出如下</div><div class="line">kjh</div><div class="line"><span class="number">0</span></div><div class="line"><span class="number">1</span></div><div class="line"><span class="number">2</span></div><div class="line"><span class="number">3</span></div><div class="line"><span class="number">4</span></div><div class="line"><span class="number">5</span></div><div class="line"><span class="number">6</span></div><div class="line"><span class="number">7</span></div><div class="line"><span class="number">8</span></div><div class="line"><span class="number">9</span></div></pre></td></tr></table></figure>
-<p>可以看到，我们输入了一个字符串kjh，然而在循环里a被重新赋值为数字，数字的赋值范围是0~9，for…in range(a，b)也就是python3中for语句的使用方式。</p>
-<p>如果我将a的输入作为for循环的上界，输入一个6，会发生什么呢，会输出6 7 8 9吗</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">a = input()</div><div class="line"><span class="keyword">for</span> a <span class="keyword">in</span> range(<span class="number">0</span>,<span class="number">10</span>):</div><div class="line">    print(a)</div><div class="line"></div><div class="line">    </div><div class="line">//输入输出如下</div><div class="line"><span class="number">6</span></div><div class="line">Traceback (most recent call last):</div><div class="line">  File <span class="string">"E:\PythonProjects\input.py"</span>, line <span class="number">2</span>, <span class="keyword">in</span> &lt;module&gt;</div><div class="line">    <span class="keyword">for</span> a <span class="keyword">in</span> range(a,<span class="number">10</span>):</div><div class="line">TypeError: <span class="string">'str'</span> object cannot be interpreted <span class="keyword">as</span> an integer</div></pre></td></tr></table></figure>
-<p>可以看到，程序报错了，这是因为<strong>input函数接收到的输入是str（字符串）类型的，而在for循环中的a是整数类型的。</strong></p>
-<h3 id="定义函数"><a href="#定义函数" class="headerlink" title="定义函数"></a>定义函数</h3><p>python除了其本身封装好的函数比如input（）、range（）等，还支持自定义函数，定义函数需要关键字<strong>def</strong>，也就是define的缩写，示例如下：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">hello</span><span class="params">()</span>:</span></div><div class="line">    print(<span class="string">"hello"</span>)</div><div class="line"></div><div class="line">hello()</div><div class="line"></div><div class="line"></div><div class="line">//输出：</div><div class="line">hello</div></pre></td></tr></table></figure>
-<p>可以看到，定义函数需要有函数名、括号、冒号，后面缩进的部分是函数体，括号里是空的表示这个函数不需要参数。而下面的hello（）表示调用这个函数。</p>
-<p>我们看到示例的函数调用放在了定义的下面，如果调用放在定义前面就会报错：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Traceback (most recent call last):</div><div class="line">  File <span class="string">"E:\PythonProjects\input.py"</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</div><div class="line">    hello()</div><div class="line">NameError: name <span class="string">'hello'</span> <span class="keyword">is</span> <span class="keyword">not</span> defined</div></pre></td></tr></table></figure>
-<p>表示该函数还没有定义。</p>
-
+        
+          <a class="article-more-a" href="/2017/12/18/python3基础/#more">more >></a>
+        
       
 
       
@@ -873,11 +850,11 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
@@ -968,11 +945,11 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
@@ -1215,15 +1192,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Android</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1235,11 +1212,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
+                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1255,15 +1232,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Python</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">JVM</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">并发</a>
+                <a href="javascript:void(0)" class="js-tag color2">Python</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1271,7 +1248,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
+                <a href="javascript:void(0)" class="js-tag color3">并发</a>
               </li>
             
             <div class="clearfix"></div>
