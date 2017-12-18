@@ -6,25 +6,17 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>堆排序 | Rirsa&#39;s Home</title>
+  <title>Archives: 2017/12 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="二叉树说到堆，首先要提一下二叉树。 根据数据结构的基础知识，可以知道二叉树分为完全二叉树和满二叉树，其中满二叉树很好理解，就是一棵除了最后一层没有子结点、其余每一层的所有结点都有两个子节点的二叉树，如下图：">
-<meta name="keywords" content="Java,数据结构">
-<meta property="og:type" content="article">
-<meta property="og:title" content="堆排序">
-<meta property="og:url" content="http://yoursite.com/2017/09/21/heapsort/index.html">
+  <meta name="description" content="be strong,be friends">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Rirsa&#39;s Home">
+<meta property="og:url" content="http://yoursite.com/archives/2017/12/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="二叉树说到堆，首先要提一下二叉树。 根据数据结构的基础知识，可以知道二叉树分为完全二叉树和满二叉树，其中满二叉树很好理解，就是一棵除了最后一层没有子结点、其余每一层的所有结点都有两个子节点的二叉树，如下图：">
-<meta property="og:image" content="http://bubkoo.qiniudn.com/full%C2%A0binary%C2%A0tree.png">
-<meta property="og:image" content="http://img.blog.csdn.net/20150612143904949?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbWF3bWluZw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center">
-<meta property="og:image" content="http://img.my.csdn.net/uploads/201102/21/8394323_1298303196BZwW.jpg">
-<meta property="og:image" content="http://ww1.sinaimg.cn/large/006aoiFpgy1fkhumx9xg5j30in0a2jro.jpg">
-<meta property="og:image" content="http://ww1.sinaimg.cn/large/006aoiFpgy1fkhuqi4btcj30jx0aat90.jpg">
-<meta property="og:updated_time" content="2017-10-14T08:48:35.141Z">
+<meta property="og:description" content="be strong,be friends">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="堆排序">
-<meta name="twitter:description" content="二叉树说到堆，首先要提一下二叉树。 根据数据结构的基础知识，可以知道二叉树分为完全二叉树和满二叉树，其中满二叉树很好理解，就是一棵除了最后一层没有子结点、其余每一层的所有结点都有两个子节点的二叉树，如下图：">
-<meta name="twitter:image" content="http://bubkoo.qiniudn.com/full%C2%A0binary%C2%A0tree.png">
+<meta name="twitter:title" content="Rirsa&#39;s Home">
+<meta name="twitter:description" content="be strong,be friends">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -170,123 +162,52 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-heapsort" class="article article-type-post " itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      堆排序
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2017" class="archive-year">2017</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2017/12/18/python3基础/" class="archive-article-date">
+  	<time datetime="2017-12-18T02:52:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-12-18</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2017/12/18/python3基础/">python3基础</a>
     </h1>
   
 
-        
-        <a href="/2017/09/21/heapsort/" class="archive-article-date">
-  	<time datetime="2017-09-21T13:26:45.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-09-21</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="二叉树"><a href="#二叉树" class="headerlink" title="二叉树"></a>二叉树</h2><p>说到堆，首先要提一下二叉树。</p>
-<p>根据数据结构的基础知识，可以知道二叉树分为<strong>完全二叉树</strong>和<strong>满二叉树</strong>，其中满二叉树很好理解，就是一棵除了最后一层没有子结点、其余每一层的所有结点都有两个子节点的二叉树，如下图：</p>
-<a id="more"></a>
-<p><img src="http://bubkoo.qiniudn.com/full%C2%A0binary%C2%A0tree.png" alt="完全二叉树"></p>
-<p>满二叉树的结点数是同样深度的二叉树的结点数的最大值，所有叶子结点必须在同一层上。</p>
-<p>完全二叉树又是什么呢？其实完全二叉树是从满二叉树上衍生出来的，官方定义是<strong>对于深度为K的，有N个结点的二叉树，当且仅当其每一个结点都与深度为K的满二叉树中编号从1至n的结点一一对应时称之为完全二叉树。</strong></p>
-<p>但其实就我来说，第一遍读完全二叉树的定义是没有读懂的，所以我再把自己的理解用比较通俗的话说出来：<strong>完全二叉树就是只有最后一行没满的满二叉树，且最后一行的叶子结点都集中在左边。</strong>可以结合下图理解：</p>
-<p><img src="http://img.blog.csdn.net/20150612143904949?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbWF3bWluZw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt="完全二叉树与非完全二叉树"></p>
-<h2 id="堆"><a href="#堆" class="headerlink" title="堆"></a>堆</h2><p><strong>堆是一种特殊的树</strong>，堆和树的区别在于，树不会对元素进行排序，而堆是遵循父结点小于子结点或父结点大于子结点的特殊的树，它的根结点的值是最大或最小的。</p>
-<p>而我们平时经常提到的、以及经常应用的堆，如果不明确说明，其实都是说的<strong>二叉堆</strong>，从名字就可以看出来，二叉堆是从二叉树衍生来的，通过上面的描述我们已经知道二叉树分为满二叉树和完全二叉树，<strong>二叉堆就是一棵特殊的完全二叉树</strong>。<br>而特殊的点也就是上一段所说的，二叉堆的任意结点会全部大于或小于两个子结点，根结点会是所有结点的最大或最小值。</p>
-<p>其中，将<strong>根结点最大的堆称为最大堆或大根堆，根结点最小的堆称为最小堆或小根堆。</strong></p>
-<p>需要特别注意一下的是，由于堆是由树实现的，而我们习惯用链表来实现树，所以自然会想到用链表来实现堆，实现是可以实现的，但是更推荐用数组来实现堆，<strong>这是因为就堆排序来说，如果用链表的实现方式，同样也可以实现，但是与数组相比每个结点的大小增大了（每个结点需要存储数据和指向子结点或父结点的指针），但是算法却没有得到优化，时间复杂度还是平均N*log2（N）（N为结点数）</strong>，所以是没有必要的。</p>
-<p>当然，有时候为了方便，我们也会直接使用集合来实现堆，具体还是要看需求场景。</p>
-<p>下图为一个典型的数组实现堆：</p>
-<p><img src="http://img.my.csdn.net/uploads/201102/21/8394323_1298303196BZwW.jpg" alt="堆"></p>
-<h2 id="堆排序"><a href="#堆排序" class="headerlink" title="堆排序"></a>堆排序</h2><p>对二叉树和堆的基本概念了解之后，终于可以进入正题，那么什么是堆排序呢？其实堆排序就是不停的在做两件事：<strong>构建堆和取出根结点。</strong>这里我们使用最大堆来进行排序。</p>
-<p>最复杂的部分是构建最大堆，根据上面的内容我们知道最大堆的特性是任意父结点的值大于两个子结点的值，所以构建最大堆的过程就是不停遍历堆中元素，将子结点大于父结点的地方进行一个父与子值的对换，然后将对换后的子结点再与子结点的子结点比较，依次执行下去。</p>
-<p>根据上面的描述，不难想象到这是一个递归的过程，所以可以使用递归的方法来处理这个算法，但是由于递归对资源的消耗比较大，而且容易出现问题，所以这里我们单纯使用循环来实现了构建堆的maxHeapify方法，方法如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line">     * 生成最大堆的方法</div><div class="line">     * <span class="doctag">@param</span> data 传入的数组</div><div class="line">     * <span class="doctag">@param</span> last 尚未进行排序的最后一个元素的位置</div><div class="line">     */</div><div class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">maxHeapify</span><span class="params">(<span class="keyword">int</span>[] data,<span class="keyword">int</span> last)</span> </span>&#123;</div><div class="line">        <span class="keyword">int</span> parentPos = (last-<span class="number">1</span>)&gt;&gt;<span class="number">1</span>;</div><div class="line">        <span class="keyword">if</span> (parentPos==last) <span class="keyword">return</span>;</div><div class="line">        <span class="keyword">int</span> point = parentPos;</div><div class="line">        <span class="keyword">while</span> (parentPos&gt;=<span class="number">0</span>)&#123;</div><div class="line">            <span class="keyword">int</span> leftChildPos = (parentPos&lt;&lt;<span class="number">1</span>)+<span class="number">1</span>;</div><div class="line">            <span class="keyword">int</span> rightChildPos = -<span class="number">1</span>;</div><div class="line">            <span class="keyword">int</span> rightChild = -<span class="number">1</span>;</div><div class="line">            <span class="keyword">boolean</span> haveRight = ((parentPos+<span class="number">1</span>)&lt;&lt;<span class="number">1</span>)&lt;=last;</div><div class="line">            <span class="keyword">if</span> (haveRight)&#123;</div><div class="line">                rightChildPos = (parentPos+<span class="number">1</span>)&lt;&lt;<span class="number">1</span>;</div><div class="line">                rightChild = data[rightChildPos];</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">if</span> (data[parentPos]&lt;data[leftChildPos])&#123;</div><div class="line">                <span class="keyword">int</span> temp = data[parentPos];</div><div class="line">                data[parentPos] = data[leftChildPos];</div><div class="line">                data[leftChildPos] = temp;</div><div class="line">                <span class="keyword">if</span> (((leftChildPos&lt;&lt;<span class="number">1</span>)+<span class="number">1</span>)&lt;=last)</div><div class="line">                    point = leftChildPos;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">if</span> (data[parentPos]&lt;rightChild)&#123;</div><div class="line">                <span class="keyword">int</span> temp = data[parentPos];</div><div class="line">                data[parentPos] = data[rightChildPos];</div><div class="line">                data[rightChildPos] = temp;</div><div class="line">                <span class="keyword">if</span> (((rightChildPos&lt;&lt;<span class="number">1</span>)+<span class="number">1</span>)&lt;=last)</div><div class="line">                    point = rightChildPos;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">if</span> (point!=parentPos) &#123;</div><div class="line">                parentPos = point;</div><div class="line">                <span class="keyword">continue</span>;</div><div class="line">            &#125;</div><div class="line">            point = --parentPos;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
-<p>因为只是实现一个思路，所以这里选择了最直观的对正整数排序，方法实现的思路是传入要排序的数组和要排序的最后一个元素的位置，首先计算出最后一个父结点的位置，为什么要从最后一个父结点而不是最后一个结点的位置呢，因为我们选择的方法是依次比较父结点和两个子结点的大小，如果父结点小于其中某个子结点就进行一个值的对换，既然如此那些叶子结点本身没有子结点，也就没有从它们开始遍历的必要。</p>
-<p>计算最后一个父结点的位置用到了位运算：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> parentPos = (last-<span class="number">1</span>)&gt;&gt;<span class="number">1</span>;</div></pre></td></tr></table></figure>
-<p>其实这个式子相当于（last-1）*2，就是一个完全二叉树从子结点位置求父结点位置的公式，之所以使用位运算而不是乘运算是因为位运算效率比普通乘除运算高大约3-5倍，所以后面也有其他的对位运算的使用。</p>
-<p>之后我们用了一个point值等于父结点的位置，这个point相当于一个指针，这里虽然只是让它等于父结点的值，但后面它的作用其实是用来指示下一个父结点的位置。</p>
-<p>之后就进入了用来代替递归的while循环中，循环中的实现思路简单来说就是根据现在的父结点获取到左子结点和右子结点，根据它们对应的位置从数组中获取到对应结点的值，然后进行一个大小比较，如果父结点的值小于左子结点，就将这两个结点的值进行交换，同理再将现在父结点的值与右子结点比较。这里需要注意的是<strong>右子结点是有可能不存在的</strong>，这里为了标示右子结点是否存在设了一个haveRight的波尔值：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> rightChildPos = -<span class="number">1</span>;</div><div class="line"><span class="keyword">int</span> rightChild = -<span class="number">1</span>;</div><div class="line"><span class="keyword">boolean</span> haveRight = ((parentPos+<span class="number">1</span>)&lt;&lt;<span class="number">1</span>)&lt;=last;</div><div class="line"><span class="keyword">if</span> (haveRight)&#123;</div><div class="line">    rightChildPos = (parentPos+<span class="number">1</span>)&lt;&lt;<span class="number">1</span>;</div><div class="line">    rightChild = data[rightChildPos];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>因为这里示例是简单的对正数排序，所以我们直接对右子结点默认-1，后面的比较只要不小于它就说明右子结点存在（当然这还是不严密的）。</p>
-<p>我们可以看到，不管是对左子结点还是右子结点进行比较，对应的代码段中都有一句对point的操作，这也就是这个循环用来代替递归的关键语句：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (((leftChildPos&lt;&lt;<span class="number">1</span>)+<span class="number">1</span>)&lt;=last)</div><div class="line">    point = leftChildPos;</div><div class="line"></div><div class="line"><span class="keyword">if</span> (((rightChildPos&lt;&lt;<span class="number">1</span>)+<span class="number">1</span>)&lt;=last)</div><div class="line">    point = rightChildPos;</div></pre></td></tr></table></figure>
-<p>我们知道，根据之前的实现思路，如果是操作最后一个父结点，那么只需要对父结点和子结点进行一个简单的对调就可以结束对这个父结点的操作了，但是如果放到上层的父结点，事情就没这么简单，对第一层父结点与子结点进行对换之后，<strong>我们需要回过头去看被调换了值的子结点与这个子结点的子结点的大小比较</strong>。</p>
-<p>有一点拗口啊，举个例子，有这样一个完全二叉树：</p>
-<p><img src="http://ww1.sinaimg.cn/large/006aoiFpgy1fkhumx9xg5j30in0a2jro.jpg" alt=""></p>
-<p>此时如果正在比较的父结点位置为1，则5与8和45分别比较，一轮比较之后变成下面的完全二叉树：</p>
-<p><img src="http://ww1.sinaimg.cn/large/006aoiFpgy1fkhuqi4btcj30jx0aat90.jpg" alt=""></p>
-<p>可以看到，父结点的5与两个子结点发生过对换后，新的子结点5和8与它们对应的子结点又发生了大小关系的变化，5比它的子结点7小，8比它的子结点11小，也就是说，<strong>发生过一次结点对换后，需要再将对换后的子结点与子结点的子结点进行大小比较</strong>，这时候point就可以发挥作用了，我们判断<strong>如果发生过一次对换并且对换后的子结点还有子结点，则将point指向对换后的子结点，标识这个子结点会作为下一次循环的父结点。</strong>具体实现便是上面的那两个if语句。</p>
-<p>循环的最后，判断point是否和一开始的父结点位置相同，如果不同就说明发生了父结点与子结点的对换并且对换后的子结点还有子结点，也就让代表父结点位置的parentPos等于point，然后continue开始下一次循环。而如果point还与父结点位置相同，说明这个父结点没有与子结点发生对换或者发生了对换但是子结点没有下一层子结点，也就不需要去判断子结点与子结点的子结点的大小关系，这两种情况就可以直接让父结点和point的位置-1，直接开始对下一个父结点的比较。</p>
-<p>上面是生成最大堆的操作，而堆排序是不断进行两个操作，除了生成最大堆，还要不断取出根元素，相比生成最大堆，取出根元素的操作就简单很多，只是一个值的对换：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line">  * 将成堆后的根结点与堆的最后一个元素互换位置</div><div class="line">  * <span class="doctag">@param</span> data 数组</div><div class="line">  * <span class="doctag">@param</span> last 还没有进行排序的最后一个元素的位置</div><div class="line">  */</div><div class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">swapRoot</span><span class="params">(<span class="keyword">int</span>[] data,<span class="keyword">int</span> last)</span> </span>&#123;</div><div class="line">     <span class="keyword">int</span> temp = data[<span class="number">0</span>];</div><div class="line">     data[<span class="number">0</span>] = data[last];</div><div class="line">     data[last] = temp;</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
-<p>也就是将根元素与last指向的最后一个元素位置相对换。</p>
-<p>这两个方法完成之后，堆排序的操作就很简单了：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span>[] heapSort(<span class="keyword">int</span>[] data)&#123;</div><div class="line">        <span class="keyword">int</span> last = data.length-<span class="number">1</span>;</div><div class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = last;i&gt;<span class="number">0</span>;i--)&#123;</div><div class="line">            maxHeapify(data,i);</div><div class="line">            swapRoot(data,i);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> data;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
-<p>我们只需要传入需要排序的数组，先对整个数组构建最大堆，然后将根与最后一个值交换，然后将last往前移动一位，再对改换last值的数组进行一次构建堆，然后将新的根与last处的值交换。。。直到last指到根，这个数组也就完成了排序。</p>
-
-      
-
-      
-        <div class="page-reward">
-          <a href="javascript:;" class="page-reward-btn tooltip-top">
-            <div class="tooltip tooltip-east">
-            <span class="tooltip-item">
-              赏
-            </span>
-            <span class="tooltip-content">
-              <span class="tooltip-text">
-                <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>有帮助的话可以给点鼓励哦<i class="icon icon-quo-right"></i></p>
-                  <div class="reward-box">
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://ww1.sinaimg.cn/large/006aoiFpgy1fii2bu1zqfj30u019jqa0.jpg">
-                      <span class="reward-type">支付宝</span>
-                    </div>
-                    
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://ww1.sinaimg.cn/large/006aoiFpgy1fii2c52suhj30yi1bcace.jpg">
-                      <span class="reward-type">微信</span>
-                    </div>
-                    
-                  </div>
-                </span>
-              </span>
-            </span>
-          </div>
-          </a>
-        </div>
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
+        <div class="article-info info-on-right">
+          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">基础</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">数据结构</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Python</a>
         		</li>
       		
 		</ul>
 	</div>
 
-      
+          
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
@@ -299,124 +220,17 @@
 	</div>
 
 
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/09/21/heapsort/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
-  
-<nav id="article-nav">
-  
-    <a href="/2017/10/19/effectiveJava-1/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          EffectiveJava笔记——equals方法与hashCode方法
-        
-      </div>
-    </a>
   
   
-    <a href="/2017/09/14/singleTon/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">单例模式的总结</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-        <div class="toc-container tooltip-left">
-            <i class="icon-font icon-category"></i>
-            <div class="tooltip tooltip-east">
-                <span class="tooltip-item">
-                </span>
-                <span class="tooltip-content">
-                    <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#二叉树"><span class="toc-number">1.</span> <span class="toc-text">二叉树</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#堆"><span class="toc-number">2.</span> <span class="toc-text">堆</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#堆排序"><span class="toc-number">3.</span> <span class="toc-text">堆排序</span></a></li></ol>
-                    </div>
-                </span>
-            </div>
-        </div>
-        
-    </div>
-</aside>
-
-
-
-  
-  
+    </div></section>
   
 
-  
-
-  
+    
 
 
           </div>
@@ -439,8 +253,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
-		isArchive: false,
+		isPost: false,
+		isArchive: true,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
