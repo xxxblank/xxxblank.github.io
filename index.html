@@ -191,106 +191,10 @@
 <li><p>/boot</p>
 <p>存放着启动Linux的核心文件，包括连接文件和镜像文件</p>
 </li>
-<li><p>/dev</p>
-<p>device的缩写，存放的是Linux的外部设备</p>
-</li>
-<li><p>/home</p>
-<p>用户的主目录</p>
-</li>
-<li><p>/lib  </p>
-<p>这个目录存放着系统最基本的动态连接共享库</p>
-</li>
-<li><p>/media</p>
-<p>Linux自动识别的设备，例如U盘、光驱等识别后会把识别的设备挂载到这个目录下</p>
-</li>
-<li><p>/root</p>
-<p>该目录为系统管理员用户的主目录</p>
-</li>
-<li><p>/usr</p>
-<p>用户的很多应用程序和文件都放在这个目录下</p>
-</li>
-<li><p>/etc</p>
-<p>这个目录用来存放所有系统管理所需要的配置文件和子目录</p>
-</li>
-<li><p>/var</p>
-<p>存放着不断扩充着的东西，习惯将经常被修改的目录放在这个目录下，包括各种日志文件</p>
-</li>
 </ul>
-<h2 id="命令笔记"><a href="#命令笔记" class="headerlink" title="命令笔记"></a>命令笔记</h2><ul>
-<li><p><strong>man + 命令</strong>   返回跟在man指令后面的指令的使用文档   </p>
-<p>例：显示ls指令的使用文档</p>
-<p>man ls</p>
-</li>
-<li><p><strong>ls  + 文件</strong>  返回ls指令后文档的内容 ，不加文件默认显示当前文档内容</p>
-<p>例：返回<strong>根目录</strong>下的内容</p>
-<p>ls /</p>
-</li>
-<li><p><strong>pwd</strong>  打印出当前所在目录</p>
-<p>例：打印当前目录</p>
-<p>pwd</p>
-</li>
-<li><p><strong>cd + 绝对路径/相对路径</strong> 到路径指定的文件内</p>
-<p>例：</p>
-<p>（1）到/usr/bin文件内（通过绝对路径）</p>
-<p>cd /usr/bin</p>
-<p>（2）在/user文件内，通过相对路径到etc文件内</p>
-<p>cd etc</p>
-</li>
-<li><p><strong>./ 当前目录   ../上级目录</strong></p>
-<p>例：在/usr/bin目录下，回到/usr目录</p>
-<p>cd ../</p>
-</li>
-<li><p><strong>mkdir+目录路径 </strong>  创建一个目录</p>
-<p>当前在/home/rirsa目录下</p>
-<p>例1：新创建test目录</p>
-<p>mkdir test</p>
-<p>例2：新创建test/test1/test2目录</p>
-<p><strong>mkdir -p test/test1/test2</strong>     <strong>注意：在test1没有创建的情况下，如果直接创建test2会出现报错，所以需要使用mkdir的-p参数，进行递归创建目录，直到创建到需要的目录</strong></p>
-</li>
-<li><p><strong>rmdir+目录路径</strong>  删除一个目录</p>
-<p>当前在/home/rirsa目录下，且已经新建了test/test1/test2目录</p>
-<p>例1：删除test2目录</p>
-<p>rmdir test/test1/test2</p>
-<p>例2：删除test2和它的父目录</p>
-<p>rmdir -p test/test1/test2   <strong>注意：rmdir命令的-p参数和mkdir类似，也是有递归的意思，这个命令会在删除test2目录的同时删除test1目录、删除test目录。也有不能删除的情况，比如test目录下除了test1还有一个test3，则此时这个命令会在删除test2、test1后报错，因为test目录中还有一个test3目录，不能删除test目录。</strong></p>
-</li>
-<li><p><strong>rm -r 目录路径    或    rm 文件路径</strong>  删除目录或文件</p>
-<p>当前在/home/rirsa目录下，且已经新建了test/test1/test2目录，并在test目录下除了test1另新建了一个test3目录</p>
-<p>例1：删除test目录</p>
-<p>rm -r test  <strong>注意：前面已经知道，如果用rmdir删除还有子目录的目录会报错，但是用rm可以不管该目录有没有内容直接删除目录，但是需要使用-r参数标识这是要删除一个目录而不是文件。</strong></p>
-</li>
-<li><p><strong>cat+文件名</strong>   显示文件内容</p>
-<p>例：显示/etc/passwd文件的内容</p>
-<p>cat  /etc/passwd</p>
-</li>
-<li><p><strong>groupadd [-g gid]  goupname</strong>  添加用户组，中间参数是可以手动设置用户组组号，如果缺省则使用系统自动补起的组号</p>
-<p>例1：增加一个名为grouptest1的用户组</p>
-<p>groupadd grouptest1</p>
-<p>例2：增加一个名为grouptest1且指定为1002号组号的用户组</p>
-<p>groupadd -g 1002 grouptest1</p>
-</li>
-<li><p><strong>groupdel groupname</strong>  删除用户组，无特殊参数</p>
-<p>例：删除grouptest1用户组</p>
-<p>groupdel grouptest1</p>
-</li>
-<li><p><strong>useradd [-u uid]|[-g gid]|[-d home]|[-M]|[-s]  username</strong>  添加用户，其中可以通过-u和-g指定userid和groupid，groupid可以指定该用户属于哪个组，-d参数可以用于自定义该用户的家目录，通过-M参数可以让该用户不建立家目录，-s参数可以自定义shell</p>
-<p>例1：创建一个普通用户</p>
-<p>useradd usertest1</p>
-<p>例2：指定在groupid为102的grouptest1用户组创建一个用户</p>
-<p>useradd -g 1002 usertest1</p>
-</li>
-<li><p><strong>userdel [-r] username</strong> 删除一个用户名为username的用户，-r参数可以在删除该用户的同时删除该用户的home目录</p>
-<p>例：删除usertest1用户，同时删除对应的home目录</p>
-<p>userdel -r usertest1</p>
-</li>
-<li><p><strong>passwd [username]</strong> 更改/创建用户密码，后面不带用户名则为更改当前用户的密码</p>
-</li>
-<li><p><strong>su - [username]</strong> 切换用户，如果后面带着用户名则切换到对应用户，不带用户名默认切换到root用户</p>
-</li>
-<li><p>​</p>
-</li>
-</ul>
-
+        
+          <a class="article-more-a" href="/2017/12/25/Linux学习/#more">more >></a>
+        
       
 
       
@@ -582,15 +486,15 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">基础</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">读书笔记</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">基础</a>
         		</li>
       		
 		</ul>
@@ -1043,11 +947,11 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
@@ -1138,11 +1042,11 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
@@ -1298,11 +1202,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1314,7 +1226,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1326,27 +1242,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Python</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">JVM</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">Python</a>
               </li>
              
               <li class="article-tag-list-item">
