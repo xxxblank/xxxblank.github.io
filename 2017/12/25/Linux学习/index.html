@@ -15,7 +15,7 @@
 <meta property="og:url" content="http://yoursite.com/2017/12/25/Linux学习/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
 <meta property="og:description" content="目录笔记 /bin binary的缩写，存放着最经常使用的命令  /boot 存放着启动Linux的核心文件，包括连接文件和镜像文件">
-<meta property="og:updated_time" content="2017-12-25T12:29:40.753Z">
+<meta property="og:updated_time" content="2017-12-25T13:46:57.597Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux学习">
 <meta name="twitter:description" content="目录笔记 /bin binary的缩写，存放着最经常使用的命令  /boot 存放着启动Linux的核心文件，包括连接文件和镜像文件">
@@ -262,7 +262,7 @@
 <p>例1：删除test目录</p>
 <p>rm -r test  <strong>注意：前面已经知道，如果用rmdir删除还有子目录的目录会报错，但是用rm可以不管该目录有没有内容直接删除目录，但是需要使用-r参数标识这是要删除一个目录而不是文件。</strong></p>
 </li>
-<li><p><strong>cat+文件名</strong>   显示文件内容</p>
+<li><p><strong>cat/tac+文件名</strong>   显示文件内容</p>
 <p>例：显示/etc/passwd文件的内容</p>
 <p>cat  /etc/passwd</p>
 </li>
@@ -290,7 +290,36 @@
 </li>
 <li><p><strong>su - [username]</strong> 切换用户，如果后面带着用户名则切换到对应用户，不带用户名默认切换到root用户</p>
 </li>
-<li><p>​</p>
+<li><p><strong>visudo</strong> 打开sudo权限编辑器，只能通过root用户编辑，root用户可在这个编辑器中为其他用户加上sudo权限，只有被加入sudo权限后的用户才能进行一些需要权限的操作</p>
+</li>
+<li><p><strong>cp 源文件 目标文件</strong>  将源文件复制到目标文件中，如果目标文件不存在，则会自动创建并将内容复制过去，如果目标处填写的是一个路径，如果该路径存在，则保留文件名将文件复制到该路径下，如果该路径只有最后一层不存在，则将该路径最后一层作为一个文件创建并将内容复制进去。</p>
+<p>注意：<strong>centos中，cp命令默认不会提示覆盖内容，即如果出现cp file1 file2，file1和file2中都有数据，则该命令会直接将file2中的数据覆盖，如果需要提示覆盖内容，需要使用-i参数</strong></p>
+<p>例：将file1的内容复制到file2中，如果file2中有内容则进行提示</p>
+<p>cp -i file1 file2</p>
+</li>
+<li><p><strong>mv 源文件 目标文件/目标路径</strong>  如果目标是文件，其实相当于给源文件重命名的作用，系统会将源文件重命名为目标文件名，然后直接移动过去覆盖掉目标文件；如果目标文件不存在，就只是重命名然后移动过去；如果目标是路径，路径存在则源文件不变直接移动过去，只有最后一层不存在则将源文件重命名为最后一层的文件名然后移动过去</p>
+<p>同样，mv命令也是默认不会提示直接覆盖内容，如果需要提示覆盖内容需要使用-i参数。</p>
+</li>
+<li><p><strong>more/less + 文件名</strong> 显示文件内容</p>
+<p>相比cat，more和less来进行文件内容的阅读更合适，cat是不管文件内容多少将所有内容显示在屏幕上，相对来说：</p>
+<ul>
+<li>more   可以将文件内容分页，可以<strong>通过enter或空格进行翻页阅读</strong>，但是只能往下翻，翻完就退出，可以通过按下q键提前退出</li>
+<li>less  可以将文件内容分页，可以通过enter或空格进行翻页，同时可以通过<strong>按j下翻、按k上翻、按q退出、按/或？+word在文件内对word字段进行搜索定位</strong></li>
+</ul>
+</li>
+<li><p><strong>head/tail [-n N] 文件</strong>  显示文件前/后n行内容</p>
+<p>对比上面的more/less/cat，head和tail命令是为了只看某文件最开头/结尾部分数据的命令，参数n可以指定行数，如果不指定默认显示10行</p>
+<p><strong>tail还有一个-f参数，可用于设置动态显示文件最后几行的内容</strong></p>
+</li>
+<li><p><strong>find [路径]|[参数] </strong>  可通过不同的路径和参数查找文件</p>
+<p>其中的参数有几个应用比较多的：</p>
+<ul>
+<li>-atime+n  a为access的缩写，表示访问时间大于n天的文件</li>
+<li>-ctime+n   c为create的缩写，表示写入、更改所有者、权限、连接的时间大于n天的文件</li>
+<li>-mtime+n  m为modified的缩写，表示文件内容修改的时间大于n天的文件</li>
+<li>-name + name  通过文件名查找文件，用的比较多的查找方式</li>
+<li>-type + type 通过文件类型查找文件</li>
+</ul>
 </li>
 </ul>
 
@@ -548,31 +577,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Android</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">Java</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">Linux</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">基础</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Android</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -584,6 +597,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
               </li>
              
@@ -592,11 +613,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">JVM</a>
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">JVM</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -605,6 +630,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
               </li>
              
               <li class="article-tag-list-item">
