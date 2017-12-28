@@ -8,17 +8,17 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>Linux学习 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="目录笔记 /bin binary的缩写，存放着最经常使用的命令  /boot 存放着启动Linux的核心文件，包括连接文件和镜像文件">
+  <meta name="description" content="Linux文件目录 /bin binary的缩写，存放着最经常使用的命令  /boot 存放着启动Linux的核心文件，包括连接文件和镜像文件">
 <meta name="keywords" content="Linux,基础">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux学习">
 <meta property="og:url" content="http://yoursite.com/2017/12/25/Linux学习/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="目录笔记 /bin binary的缩写，存放着最经常使用的命令  /boot 存放着启动Linux的核心文件，包括连接文件和镜像文件">
-<meta property="og:updated_time" content="2017-12-25T13:46:57.597Z">
+<meta property="og:description" content="Linux文件目录 /bin binary的缩写，存放着最经常使用的命令  /boot 存放着启动Linux的核心文件，包括连接文件和镜像文件">
+<meta property="og:updated_time" content="2017-12-27T13:48:25.850Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux学习">
-<meta name="twitter:description" content="目录笔记 /bin binary的缩写，存放着最经常使用的命令  /boot 存放着启动Linux的核心文件，包括连接文件和镜像文件">
+<meta name="twitter:description" content="Linux文件目录 /bin binary的缩写，存放着最经常使用的命令  /boot 存放着启动Linux的核心文件，包括连接文件和镜像文件">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -184,7 +184,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="目录笔记"><a href="#目录笔记" class="headerlink" title="目录笔记"></a>目录笔记</h2><ul>
+        <h2 id="Linux文件目录"><a href="#Linux文件目录" class="headerlink" title="Linux文件目录"></a>Linux文件目录</h2><ul>
 <li><p>/bin</p>
 <p>binary的缩写，存放着最经常使用的命令</p>
 </li>
@@ -322,6 +322,46 @@
 </ul>
 </li>
 </ul>
+<h2 id="Linux文件属性"><a href="#Linux文件属性" class="headerlink" title="Linux文件属性"></a>Linux文件属性</h2><p>在一个目录下调用ls -l时，会在显示当前目录下的文件的同时显示每个文件的属性。</p>
+<p>例：在/usr/sbin目录下新建一个test.sh，然后调用ls -l：</p>
+<p>​        -rw-r–r–  1 root root 0 12月 27 21:25 test.sh</p>
+<p>可见以空格为界，共显示了9列内容。</p>
+<h3 id="第一列"><a href="#第一列" class="headerlink" title="第一列"></a>第一列</h3><p>包含该<strong>文件类型和所属主、所属组以及其他用户对该文件的权限</strong>。</p>
+<p>第一列共有10位，<strong>第一位用来描述该文件的类型</strong>，可见上例中第一位为-，表示文件类型为普通文件。</p>
+<p>具体文件类型如下：</p>
+<ul>
+<li>d   目录</li>
+<li>‘-’   普通文件</li>
+<li>l     Linuxfile，连接文件</li>
+<li>b    块设备文件，比如磁盘分区</li>
+<li>c     串行端口设备，比如键盘、鼠标</li>
+<li>s      socket套接字文件，用于进程间通信</li>
+</ul>
+<p>后面的9位每三个一组，均为rwx的组合，其中<strong>r代表可读，w代表可写，x代表可执行</strong>。</p>
+<p><strong>第一个三位代表所属主的权限，中间三位代表所属组的权限，最后三位代表其他用户的权限。</strong></p>
+<p>比如上面的列子中，第一列的10位为 -rw-r–r– ，通过第一位看出这个文件是一个普通文件，第一个三位表示该文件的所属主拥有对该文件的读写权限，中间三位表示该文件所属组有对该文件的读权限，最后三位表示其他用户拥有对该文件的读权限。</p>
+<p>对目录来讲，<strong>打开一个目录即为执行这个目录，所以任何一个目录必须要有x权限才能打开并查看。</strong></p>
+<h3 id="第二列"><a href="#第二列" class="headerlink" title="第二列"></a>第二列</h3><p>表示为连接占用结点</p>
+<h3 id="第三列"><a href="#第三列" class="headerlink" title="第三列"></a>第三列</h3><p>表示该文件的所属主</p>
+<h3 id="第四列"><a href="#第四列" class="headerlink" title="第四列"></a>第四列</h3><p>表示该文件的所属组</p>
+<h3 id="第五列"><a href="#第五列" class="headerlink" title="第五列"></a>第五列</h3><p>表示该文件的大小</p>
+<h3 id="第六、七、八列"><a href="#第六、七、八列" class="headerlink" title="第六、七、八列"></a>第六、七、八列</h3><p>该文件的创建或修改时间</p>
+<h3 id="第九列"><a href="#第九列" class="headerlink" title="第九列"></a>第九列</h3><p>该文件的名称，如果前面有个.则说明该文件为隐藏文件</p>
+<h2 id="更改文件权限"><a href="#更改文件权限" class="headerlink" title="更改文件权限"></a>更改文件权限</h2><h3 id="更改所属主"><a href="#更改所属主" class="headerlink" title="更改所属主"></a>更改所属主</h3><ul>
+<li><p><strong>chown 【-R】 账户名 文件名</strong> </p>
+<p>这里的-R选项只作用域目录，作用是级联更改，不仅更改当前目录，连目录里的目录和文件全部更改。 </p>
+</li>
+</ul>
+<h3 id="更改所属组"><a href="#更改所属组" class="headerlink" title="更改所属组"></a>更改所属组</h3><ul>
+<li><strong>chgrp 组名 文件名   </strong></li>
+</ul>
+<h3 id="更改用户对文件的rwx权限"><a href="#更改用户对文件的rwx权限" class="headerlink" title="更改用户对文件的rwx权限"></a>更改用户对文件的rwx权限</h3><p><strong>在Linux中，为了方便更改这些权限，Linux用数字去代表rwx，其中r用4代替，w用2代替，x用1代替，-用0代替</strong>，所以上面的例子中的权限-rw-r–r–用数字表示就是644。</p>
+<p>Linux中，<strong>默认一个目录的权限为755，一个文件的权限为644</strong></p>
+<p>更改权限的命令就是</p>
+<p><strong>chmod 【-R】 xyz 文件名</strong></p>
+<p>这里的-R和chown里一样，可以级联更改，xyz是代表权限的三个数字</p>
+<p><strong>还可以通过u（user），g（group），o（other）对rxw的+（增加），-（去除），=（设定）来进行对对应对象的rwx三种权限的操作</strong></p>
+<p><strong>chmod u-x test.sh</strong></p>
 
       
 
@@ -577,39 +617,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Linux</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">基础</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Android</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">Java</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -621,15 +629,39 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">Linux</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">基础</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">杂记</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">JVM</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Python</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -638,6 +670,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">并发</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">Python</a>
               </li>
             
             <div class="clearfix"></div>
