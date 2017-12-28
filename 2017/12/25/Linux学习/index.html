@@ -15,7 +15,7 @@
 <meta property="og:url" content="http://yoursite.com/2017/12/25/Linux学习/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
 <meta property="og:description" content="Linux文件目录 /bin binary的缩写，存放着最经常使用的命令  /boot 存放着启动Linux的核心文件，包括连接文件和镜像文件">
-<meta property="og:updated_time" content="2017-12-27T13:48:25.850Z">
+<meta property="og:updated_time" content="2017-12-28T14:03:59.329Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux学习">
 <meta name="twitter:description" content="Linux文件目录 /bin binary的缩写，存放着最经常使用的命令  /boot 存放着启动Linux的核心文件，包括连接文件和镜像文件">
@@ -362,6 +362,48 @@
 <p>这里的-R和chown里一样，可以级联更改，xyz是代表权限的三个数字</p>
 <p><strong>还可以通过u（user），g（group），o（other）对rxw的+（增加），-（去除），=（设定）来进行对对应对象的rwx三种权限的操作</strong></p>
 <p><strong>chmod u-x test.sh</strong></p>
+<h2 id="if判断中的参数"><a href="#if判断中的参数" class="headerlink" title="if判断中的参数"></a>if判断中的参数</h2><ul>
+<li>【-a/-e  file】 file存在即为真</li>
+<li>【-b file】 file为块文件即为真</li>
+<li>【-c file】  file为字符文件即为真</li>
+<li>【-d file】 file 存在且为一个目录即为真</li>
+<li>【-f file】  file存在且为一个普通文件即为真</li>
+<li>【-g file】  file存在且已经设置了SGID则为真</li>
+<li>【-h file】  file存在且为一个符号连接即为真</li>
+<li>【-r file】   file可读则为真</li>
+<li>【-s file】  file存在且大小不为零则为真</li>
+<li>【-w file】  file存在且为可写的则为真</li>
+<li>【-x file】   file存在且为可执行的则为真</li>
+<li>【-S file】   file存在且为一个套接字则为真</li>
+<li>【-z STRING】 “STRING”的长度为0则为真</li>
+<li>【-n STRING】 “STRING”的长度为not zero则为真</li>
+<li>【-a】 与</li>
+<li>【-o】或</li>
+<li>【！】非</li>
+</ul>
+<h2 id="压缩与打包"><a href="#压缩与打包" class="headerlink" title="压缩与打包"></a>压缩与打包</h2><p>Windows常见的压缩文件有.rar，但在Linux下这种格式是不能用的，它有自己的压缩工具，但是.zip格式在Windows和Linux下都可以识别。</p>
+<p>Linux下的压缩文件和对应的压缩工具有：</p>
+<p>.gz   gzip压缩工具压缩的文件</p>
+<p>.bz2  bzip2压缩工具压缩的文件</p>
+<p>.tar   tar打包程序打包的文件（<strong>注意是打包，tar并没有压缩功能，只是把一个目录合并成一个文件</strong>）</p>
+<p>.tar.gz  可以理解为先用tar打包后再用gzip压缩</p>
+<p>.tar.bz2  同上，用tar打包后再用bzip2压缩</p>
+<h3 id="gzip"><a href="#gzip" class="headerlink" title="gzip"></a>gzip</h3><p><strong>gzip [-d#] filename</strong></p>
+<p>-d参数  用于解压缩</p>
+<p>-#参数  #是一个1-9的数字，表示压缩等级，1最差，9压缩的做好，6为默认</p>
+<p>要注意的是<strong>gzip不能压缩目录</strong></p>
+<h3 id="bzip2"><a href="#bzip2" class="headerlink" title="bzip2"></a>bzip2</h3><p><strong>bzip 【-dz】 filename</strong></p>
+<p>-d 同样用于解压缩</p>
+<p>-z 用于压缩，可以省略</p>
+<h3 id="tar"><a href="#tar" class="headerlink" title="tar"></a>tar</h3><p><strong>tar 【-zjxcvfpP】 filename</strong></p>
+<p>-z 是否同时使用gzip压缩</p>
+<p>-j 是否同时使用bzip2压缩</p>
+<p>-x 解包或者解压缩</p>
+<p>-t 查看tar包里面的文件</p>
+<p>-c 建立一个tar包或者压缩文件包</p>
+<p>-v 可视化</p>
+<p>-f  后面跟文件名filename，如果压缩时-f，则压缩后文件名为filename，解压缩时-f，则解压缩后文件名为filename</p>
+<p>-pP 不常用</p>
 
       
 
@@ -625,7 +667,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+                <a href="javascript:void(0)" class="js-tag color1">Linux</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">基础</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -637,11 +683,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Linux</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">基础</a>
+                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -653,11 +703,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
+                <a href="javascript:void(0)" class="js-tag color2">Python</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -674,10 +720,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Python</a>
               </li>
             
             <div class="clearfix"></div>
