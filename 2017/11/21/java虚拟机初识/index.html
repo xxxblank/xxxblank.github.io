@@ -8,17 +8,19 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>java虚拟机初识 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对JVM学习理解的整理">
+  <meta name="description" content="[TOC] （1.31更新） 与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。">
 <meta name="keywords" content="Java,读书笔记,JVM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="java虚拟机初识">
 <meta property="og:url" content="http://yoursite.com/2017/11/21/java虚拟机初识/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对JVM学习理解的整理">
-<meta property="og:updated_time" content="2017-11-21T15:26:27.697Z">
+<meta property="og:description" content="[TOC] （1.31更新） 与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/006aoiFply1fo04gqnikij30f10daglp.jpg">
+<meta property="og:updated_time" content="2018-01-31T14:00:25.525Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="java虚拟机初识">
-<meta name="twitter:description" content="与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。 但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。 本篇博客即为我对JVM学习理解的整理">
+<meta name="twitter:description" content="[TOC] （1.31更新） 与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。">
+<meta name="twitter:image" content="http://ww1.sinaimg.cn/large/006aoiFply1fo04gqnikij30f10daglp.jpg">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -184,9 +186,47 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。</p>
+        <p>[TOC]</p>
+<p>（1.31更新）</p>
+<p>与c和c++不同，Java程序员不需要时刻盯着对象的回收，在java虚拟机（JVM）中垃圾回收机制（GC）的帮助下，大多数情况下，他们只需要专心考虑需求的实现，而不需要为释放对象内存而殚精竭虑。</p>
+<a id="more"></a>
 <p>但是所谓有得必有失，Java虽然因为GC获取了极大的便利，但是也要为此了解整个JVM的运行机制，以防止虚拟机发生内存泄漏或者内存溢出之后不知道原因，导致无法优化代码。</p>
 <p>本篇博客即为我对JVM学习理解的整理，也是作为对《深入理解java虚拟机》一书的读书笔记了。</p>
+<h2 id="java的内存区域"><a href="#java的内存区域" class="headerlink" title="java的内存区域"></a>java的内存区域</h2><p>java虚拟机在执行java程序的过程中会把它所管理的内存划分为若干个不同的数据区域，这些区域都有各自的用途，以及创建和销毁时间。</p>
+<h3 id="运行时数据区域"><a href="#运行时数据区域" class="headerlink" title="运行时数据区域"></a>运行时数据区域</h3><p>java虚拟机的运行时数据区域主要有下面几个部分：</p>
+<h4 id="程序计数器（线程私有的）"><a href="#程序计数器（线程私有的）" class="headerlink" title="程序计数器（线程私有的）"></a>程序计数器（线程私有的）</h4><blockquote>
+<p>程序计数器是一块较小的内存空间，记录当前线程所执行的字节码的行号。</p>
+</blockquote>
+<p>关于虚拟机中的这个程序计数器，其实可以<strong>类比汇编语言中的IP指针</strong>，只不过IP指针是指向将要执行的<strong>下一条指令</strong>，而程序计数器记录的是当前<strong>正在执行的字节码的行号</strong>；功能上来说，汇编和虚拟机都是通过改变IP指针/程序计数器的值来控制程序语句执行的顺序。</p>
+<p>由于<strong>java虚拟机的多线程是通过线程轮流切换并分配处理器执行时间的方式来实现的</strong>，在任何一个确定的时刻，一个处理器都只会执行一条线程中的指令，因此为了线程切换后能回复到正确的执行位置，每条线程都需要有一个独立的程序计数器，各条线程之间互不影响。</p>
+<p>因此程序计数器这一块内存区域是线程私有的，每个线程都有自己的一块作为程序计数器的内存区域。</p>
+<p>如果线程执行的是一个java方法，则计数器记录正在执行的虚拟机字节码指令的地址；如果线程执行的是一个native方法，这个计数器的值则为空。</p>
+<p>此内存区域是唯一一个在jvm规范中没有规定oom情况的区域</p>
+<p><strong>总结：</strong></p>
+<ul>
+<li><strong>线程私有的</strong></li>
+<li><strong>记录当前正在执行的字节码的行号（如果正在执行的是native方法则为空）</strong></li>
+<li><strong>jvm没有规定该内存区域的oom情况</strong></li>
+</ul>
+<h4 id="虚拟机栈"><a href="#虚拟机栈" class="headerlink" title="虚拟机栈"></a>虚拟机栈</h4><blockquote>
+<p>虚拟机栈，即我们平时所说的“栈”，描述的是<strong>java方法执行的内存模型</strong>：每个方法在执行的同时都会创建一个栈帧，用于存储局部变量表、操作数栈、动态链接、方法出口等信息。每一个方法从调用直至执行完成的过程，就对应着一个栈帧在虚拟机栈中从入栈到出栈的过程。</p>
+</blockquote>
+<p>通过上面的描述我们也能大概知道，既然是记录方法的内存模型，而每个线程都有不同的方法调用，所以虚拟机栈自然也是<strong>线程私有</strong>的。</p>
+<p>像我们平时经常提及的java虚拟机分为堆、栈两个区域，其中栈就是指虚拟机栈，我们常说栈中存放的是对象的引用，这里说的其实不是整个虚拟机栈，而是虚拟机栈中的局部变量表部分。<strong>局部变量表存放了编译期可知的各种基本数据类型、对象引用和returnAddress类型（指向了一条字节码指令的地址）。</strong></p>
+<p>为了方便理解，这里做了一个虚拟机栈帧的结构，注意是栈帧，而不是整个栈，是每个方法调用时会生成的用于入栈的结构：</p>
+<p><img src="http://ww1.sinaimg.cn/large/006aoiFply1fo04gqnikij30f10daglp.jpg" alt=""></p>
+<p><strong>局部变量表所需的内存空间在编译期间完成分配</strong>，当进入一个方法时，这个方法需要在帧中分配多大的局部变量空间是完全确定的，在方法运行期间不需要改变变量表的大小。</p>
+<p>jvm规范中对这个内存区域规定了StackOverflowError异常和OutOfMemoryError异常。</p>
+<p><strong>总结：</strong></p>
+<ul>
+<li><strong>线程私有</strong></li>
+</ul>
+<ul>
+<li><strong>描述java方法执行的内存模型，每调用一个java方法即生成一个栈帧入栈</strong></li>
+<li><strong>栈帧中存储局部变量表，局部变量表中存储对象引用</strong></li>
+<li><strong>局部变量表在编译期间完成内存空间分配</strong></li>
+<li><strong>jvm规定了该区域的stackoverflow异常和oom异常</strong></li>
+</ul>
 
       
 
@@ -358,7 +398,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    目录，不存在的…
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#java的内存区域"><span class="toc-number">1.</span> <span class="toc-text">java的内存区域</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#运行时数据区域"><span class="toc-number">1.1.</span> <span class="toc-text">运行时数据区域</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#程序计数器（线程私有的）"><span class="toc-number">1.1.1.</span> <span class="toc-text">程序计数器（线程私有的）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#虚拟机栈"><span class="toc-number">1.1.2.</span> <span class="toc-text">虚拟机栈</span></a></li></ol></li></ol></li></ol>
                     </div>
                 </span>
             </div>
@@ -472,31 +512,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">Java</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Android</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Linux</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">基础</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -512,6 +528,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
               </li>
              
@@ -520,7 +540,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">JVM</a>
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -532,11 +560,23 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">基础</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">并发</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">JVM</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">Linux</a>
               </li>
             
             <div class="clearfix"></div>
