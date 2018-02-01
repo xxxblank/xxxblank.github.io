@@ -171,24 +171,14 @@
       
         <h1 id="熵权法"><a href="#熵权法" class="headerlink" title="熵权法"></a>熵权法</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>在信息论中，熵是对不确定性的一种度量。信息量越大，不确定性就越小，熵也就越小；信息量越小，不确定性越大，熵也越大。</p>
 <p>熵权法是一种客观附权法，因为它仅仅依赖于数据本身的离散型(离散型数据类似于整数，比如人数等）。本文主要讲述用熵值来判断某个指标的离散程度，指标的离散程度越大，该指标对综合评价的影响（权重）越大。</p>
-<h2 id="使用步骤"><a href="#使用步骤" class="headerlink" title="使用步骤"></a>使用步骤</h2><ul>
-<li><p>对$n个$样本，$m个 指标$,则$x_{ij}$为第$i个$样本的第$j个$指标的数值($i=1,…n;j=1,…,m$);</p>
-</li>
-<li><p>将评价矩阵归一化处理后得到$y<em>{ij}$,其计算公式如下：$y</em>{ij}=\frac{x_{ij}-min（x_j)}{max(x_j)-min(x_j)}$</p>
+<h2 id="使用步骤"><a href="#使用步骤" class="headerlink" title="使用步骤"></a>使用步骤</h2><p>1.对$n个$样本，$m个 指标$,则$x_{ij}$为第$i个$样本的第$j个$指标的数值($i=1,…n;j=1,…,m$);</p>
+<p>2.将评价矩阵归一化处理后得到$y<em>{ij}$,其计算公式如下：$y</em>{ij}=\frac{x_{ij}-min（x_j)}{max(x_j)-min(x_j)}$</p>
 <p>ps：$x_j$代表该数据对应的列</p>
-</li>
-</ul>
-<ul>
-<li><p>求各指标的信息熵</p>
+<p>3.求各指标的信息熵</p>
 <p>据信息论中信息熵的定义，一组数据的信息熵为$E<em>j=-\frac{1}{ln n}\sum\limits</em>{i=1}^n(a<em>{ij} *ln  (a</em>{ij}))$</p>
 <p>ps：定义$a<em>{ij}=0,ln(a</em>{ij})=0$</p>
-</li>
-</ul>
-<ul>
-<li><p>确定各指标权重</p>
+<p>4.确定各指标权重</p>
 <p>据信息熵的计算公式，计算出各个指标的信息熵$E_1,E_2,..,E_k$,通过信息熵计算各指标的权重：$W_i=\frac{1-E_i}{k-\sum(E_i)}$$(i=1,2,..,k)$.</p>
-</li>
-</ul>
 <h2 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h2><p>  以美国的森林大火为例，样本为{加州森林，黄石森林，大烟山森林，亚利桑那森林}，评价指标为{森林可燃物，气候条件，火源，地形因素，林区管理}。</p>
 <p>1.数据标准化</p>
 <p>表1 四个森林五个评价指标得分表</p>
@@ -1396,6 +1386,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">Python</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
               </li>
              
@@ -1405,10 +1399,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">并发</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Python</a>
               </li>
             
             <div class="clearfix"></div>
