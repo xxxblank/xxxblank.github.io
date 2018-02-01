@@ -8,18 +8,19 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>MVC与MVP | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="[TOC] MVC mvc即model（数据保存）-view（用户界面）-controler（业务逻辑），其目的是为了将数据模型和视图分离开来，并以控制器作为连接两者的桥梁以实现解耦。  mvc三部分的通信如下图，其中所有的通信都是单向的：">
+  <meta name="description" content="[TOC] MVC mvc即model（数据保存）-view（用户界面）-controller（业务逻辑），其目的是为了将数据模型和视图分离开来，并以控制器作为连接两者的桥梁以实现解耦。  mvc三部分的通信如下图，其中所有的通信都是单向的：">
 <meta name="keywords" content="Android,框架">
 <meta property="og:type" content="article">
 <meta property="og:title" content="MVC与MVP">
 <meta property="og:url" content="http://yoursite.com/2018/01/31/MVC与MVP/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="[TOC] MVC mvc即model（数据保存）-view（用户界面）-controler（业务逻辑），其目的是为了将数据模型和视图分离开来，并以控制器作为连接两者的桥梁以实现解耦。  mvc三部分的通信如下图，其中所有的通信都是单向的：">
+<meta property="og:description" content="[TOC] MVC mvc即model（数据保存）-view（用户界面）-controller（业务逻辑），其目的是为了将数据模型和视图分离开来，并以控制器作为连接两者的桥梁以实现解耦。  mvc三部分的通信如下图，其中所有的通信都是单向的：">
 <meta property="og:image" content="http://ww1.sinaimg.cn/large/006aoiFply1fo02gaiuw7j30fu09n3yf.jpg">
-<meta property="og:updated_time" content="2018-01-31T12:38:32.918Z">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/006aoiFply1fo16ng4bf2j30da0bxmyz.jpg">
+<meta property="og:updated_time" content="2018-02-01T14:18:11.124Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MVC与MVP">
-<meta name="twitter:description" content="[TOC] MVC mvc即model（数据保存）-view（用户界面）-controler（业务逻辑），其目的是为了将数据模型和视图分离开来，并以控制器作为连接两者的桥梁以实现解耦。  mvc三部分的通信如下图，其中所有的通信都是单向的：">
+<meta name="twitter:description" content="[TOC] MVC mvc即model（数据保存）-view（用户界面）-controller（业务逻辑），其目的是为了将数据模型和视图分离开来，并以控制器作为连接两者的桥梁以实现解耦。  mvc三部分的通信如下图，其中所有的通信都是单向的：">
 <meta name="twitter:image" content="http://ww1.sinaimg.cn/large/006aoiFply1fo02gaiuw7j30fu09n3yf.jpg">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
@@ -188,7 +189,7 @@
       
         <p>[TOC]</p>
 <h2 id="MVC"><a href="#MVC" class="headerlink" title="MVC"></a>MVC</h2><blockquote>
-<p>mvc即model（数据保存）-view（用户界面）-controler（业务逻辑），其目的是为了将数据模型和视图分离开来，并以控制器作为连接两者的桥梁以实现解耦。</p>
+<p>mvc即model（数据保存）-view（用户界面）-controller（业务逻辑），其目的是为了将数据模型和视图分离开来，并以控制器作为连接两者的桥梁以实现解耦。</p>
 </blockquote>
 <p>mvc三部分的通信如下图，其中所有的通信都是单向的：</p>
 <p><img src="http://ww1.sinaimg.cn/large/006aoiFply1fo02gaiuw7j30fu09n3yf.jpg" alt=""></p>
@@ -201,13 +202,33 @@
 </ul>
 <h3 id="mvc的优点与缺点"><a href="#mvc的优点与缺点" class="headerlink" title="mvc的优点与缺点"></a>mvc的优点与缺点</h3><p>mvc的优点很多，首先<strong>理解起来比较容易</strong>，技术含量并不高，易于开发和维护，其次是<strong>耦合性不高</strong>，表现层与业务层分离实现各司其职，提高代码重用性。</p>
 <p>缺点也很明显，由于要严格区分视图、数据存储和控制器，因此<strong>清晰的结构以代码的复杂性为代价</strong>，对小项目还有可能降低开发效率，<strong>控制层和表现层有时会过于紧密，导致没有真正的分离和重用。</strong></p>
-<h3 id="Android中mvc的实现"><a href="#Android中mvc的实现" class="headerlink" title="Android中mvc的实现"></a>Android中mvc的实现</h3><p>由于Android中有专用于布局的xml，因此很简单的就可以划分出Android的model、view和controler，<strong>视图层一般就采用xml文件进行界面的描述</strong>，而数据层<strong>model部分大多对应本地的数据文件或网络获取的数据体</strong>，很多时候我们对这些数据的处理也会放在这一层，最后的<strong>controler则是由activity承担</strong>。</p>
+<h3 id="Android中mvc的实现"><a href="#Android中mvc的实现" class="headerlink" title="Android中mvc的实现"></a>Android中mvc的实现</h3><p>由于Android中有专用于布局的xml，因此很简单的就可以划分出Android的model、view和controller，<strong>视图层一般就采用xml文件进行界面的描述</strong>，而数据层<strong>model部分大多对应本地的数据文件或网络获取的数据体</strong>，很多时候我们对这些数据的处理也会放在这一层，最后的<strong>controller则是由activity承担</strong>。</p>
 <p>总结一下即：</p>
 <p><strong>m</strong>odel——本地数据文件或网络获取的数据体；</p>
 <p><strong>v</strong>iew——xml文件；</p>
 <p><strong>c</strong>ontroler——activity；</p>
 <p>可见，在Android的mvc框架中，activity占据主导地位，多数逻辑代码会写在activity中，也起到了将view和model层解耦的作用，两者在activity中进行绑定或完成其它逻辑。</p>
 <p>实际上，普通的Android项目在进行开发时，framework已经搭建并提供好了足够完善的Android的UI系统框架，所以平时我们并不常用到mvc模式去脱离Android的UI系统构建自己的框架结构。</p>
+<h2 id="MVP"><a href="#MVP" class="headerlink" title="MVP"></a>MVP</h2><blockquote>
+<p>mvp是从mvc演化而来的，表示model-view-presenter。MVP能够有效的降低view的复杂性，避免业务逻辑被塞进view中，使得view变成一个混乱的大泥坑。</p>
+</blockquote>
+<p><img src="http://ww1.sinaimg.cn/large/006aoiFply1fo16ng4bf2j30da0bxmyz.jpg" alt=""></p>
+<p>我们可以看到，通过MVP，view和model层实现了完全的分离，presenter层作为中间人实现view和model的解耦。</p>
+<p>MVP模式可以分离显示层和逻辑层，它们之间<strong>通过接口</strong>进行通信，降低耦合。理想化的MVP可以实现同一份逻辑代码搭配不同的显示界面，因为它们之间并不依赖于具体，而是依赖于抽象。这使得presenter可以运用于任何实现了view逻辑接口的UI，使之具有更广泛的实用性，保证了灵活度。</p>
+<p>不难看出，MVP中的三个部分与mvc还是产生了些许不同，一般情况下，MVP中的view层不再指xml文件，而是将activity、fragment、view等作为视图层，model层还是本地数据文件或者网络请求下来的数据体，presenter层与mvc的controller层作用类似，主要承担业务逻辑，另外也承担了view和model的联系。</p>
+<h3 id="MVP与MVC、MVVM的区别"><a href="#MVP与MVC、MVVM的区别" class="headerlink" title="MVP与MVC、MVVM的区别"></a>MVP与MVC、MVVM的区别</h3><ul>
+<li><p>mvc的特点</p>
+<p>（1）用户可以向view发送指令，再由view直接要求model改变状态</p>
+<p>（2）用户也可以直接向controller发送指令，再由controller发送给view</p>
+<p>（3）controller起到事件路由的作用，同时业务逻辑都部署在controller中</p>
+<p>总的来说，mvc的耦合性还是相对较高，view可以直接访问model，导致三者之间形成回路。因此MVP与mvc之间的主要区别是<strong>MVP中的view不能直接访问model，需要通过presenter发出请求，view与model不能直接通信</strong>。</p>
+</li>
+<li><p>mvvm（model-view-ViewModle）的特点</p>
+<p>mvvm与MVP非常相似，唯一的区别是view和model进行双向绑定，两者之间有一方发生变化都会反映到另一方上。</p>
+<p>mvvm与MVP只要的区别是<strong>MVP中的view更新需要通过presenter，而mvvm不需要，因为view和model进行了双向绑定，数据的修改会直接反应到view角色上，而view的修改也会导致数据的变更。</strong>此时，ViewModel角色需要做的只是业务逻辑的处理，以及修改view或者model的状态。</p>
+<p>mvvm有点像listView、adapter和数据集的关系</p>
+</li>
+</ul>
 
       
 
