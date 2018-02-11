@@ -164,6 +164,548 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-ThreadLocal——线程的局部变量" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/02/11/ThreadLocal——线程的局部变量/">ThreadLocal源码详细解析、魔数0x61c88647</a>
+    </h1>
+  
+
+        
+        <a href="/2018/02/11/ThreadLocal——线程的局部变量/" class="archive-article-date">
+  	<time datetime="2018-02-11T10:18:36.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-02-11</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>前言：写了好多天，算是从源码上相对详细的分析了整个ThreadLocal存取的过程。整体分析大致分为三层，从最外层的ThreadLocal的存取方法，到ThreadLocalMap对应的存取方法，到ThreadLocalMap更深一层的清理方法和rehash方法。后面有些地方还存有疑惑，暂且没有查阅到答案，在文中以（?具体问题?）标注，等后面有更深入的学习后填坑。</p>
+</blockquote>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
+<li>ThreadLocal的作用和意义是什么？</li>
+<li>ThreadLocal是如何实现这样的作用的？</li>
+<li>ThreadLocal执行过程的源码分析？</li>
+</ul>
+<h2 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h2><h3 id="ThreadLocal的作用和意义"><a href="#ThreadLocal的作用和意义" class="headerlink" title="ThreadLocal的作用和意义"></a>ThreadLocal的作用和意义</h3><p>阅读学习过几篇博客后，我对ThreadLocal的理解已经写在了题目上——与很多网上的大牛所说的一样，ThreadLocal的作用就是提供一个线程的局部变量。</p>
+<p>何谓线程的局部变量？我们知道，对于多线程并发的程序来说，如果一个局部变量暴露在所有的线程下，任何一个线程都可以在另一个线程正在对这个变量进行写操作的同时读这个变量，造成线程读到的数据和我们期望的大相径庭，那么我们称这个变量是<strong>线程不安全的</strong>。为了处理这种并发问题，Java提供了两种思路，一种是我们耳熟能详的<strong>加锁</strong>，比如使用Syncronize、Lock、volatile等；一种即为<strong>将变量在每个线程里拷贝一份副本</strong>，也就是将原先共享的局部变量变成线程自己独享的局部变量，每个线程对自己独占的副本的操作不影响其他的副本。</p>
+<p>这两种方式，前者为共享，后者为独占，共享是所有线程都操作一份数据，独占是每个线程都有自己的一个副本，都有各自适应的并发问题，共享是通过Syncronize等实现，而独占就是通过ThreadLocal实现了。</p>
+<h3 id="如何实现"><a href="#如何实现" class="headerlink" title="如何实现"></a>如何实现</h3><p>下面是ThreadLocal的类声明和构造函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadLocal</span>&lt;<span class="title">T</span>&gt; </span>&#123;</div><div class="line">    <span class="comment">/**</span></div><div class="line">     * Creates a thread local variable.</div><div class="line">     */</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ThreadLocal</span><span class="params">()</span> </span>&#123;</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    ....（省略其它无关代码）....</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可见ThreadLocal对象的初始化比较简单，不需要传入什么参数，但是需要通过<strong>泛型</strong>指定需要拷贝的局部变量类型。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal&lt;Looper&gt; sThreadLocal = <span class="keyword">new</span> ThreadLocal&lt;&gt;();</div></pre></td></tr></table></figure>
+<p>上面是Android消息处理机制中对ThreadLocal的典型使用，我们知道，在Looper类中，为了使Looper对象<strong>在每个线程中只有一个单例</strong>，很巧妙的利用了ThreadLocal类作为线程局部变量的特点。</p>
+<p>继续以Looper为例，下面是Looper中使用到ThreadLocal的两个地方：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">prepare</span><span class="params">(<span class="keyword">boolean</span> quitAllowed)</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (sThreadLocal.get() != <span class="keyword">null</span>) &#123;</div><div class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Only one Looper may be created per thread"</span>);</div><div class="line">    &#125;</div><div class="line">    sThreadLocal.set(<span class="keyword">new</span> Looper(quitAllowed));</div><div class="line">&#125;</div><div class="line"></div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="meta">@Nullable</span> <span class="function">Looper <span class="title">myLooper</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> sThreadLocal.get();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到，Looper中对ThreadLocal的使用主要就是set和get两个方法，set方法将一个Looper对象作为参数存到ThreadLocal中，get方法甚至不用传参就可以取出这个对象。</p>
+<p>当然，事实并没有一个get一个set那么简单，经过前面的理解我们已经知道，这看似简简单单的两个方法造成的效果就是：<strong>如果在多个线程里使用Looper.prepare()，则每个线程都会有一个属于当前线程的Looper对象实例，通过在某个线程中调用Looper.myLooper()可以获取到这个线程的Looper对象（在调用过prepare方法后）。</strong></p>
+<p>那么ThreadLocal是如何将线程和每个线程的变量副本绑定的？线程局部变量（线程的变量副本）存储在哪？是不是每个ThreadLocal只能存储一个变量副本？如果要存储多个变量副本怎么办？</p>
+<h3 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h3><p>出于带着问题看源码的原则，回顾一下先前提出的四个问题：</p>
+<ul>
+<li>ThreadLocal是如何将线程和每个线程的变量副本绑定的？</li>
+<li>变量副本存储在哪？</li>
+<li>是不是每个ThreadLocal只能存储一个变量副本？</li>
+<li>如果要存储多个变量副本怎么办？</li>
+</ul>
+<p>ThreadLocal中可以被其他类访问的方法只有四个，get、set、initialValue和构造函数，我们从ThreadLocal中set方法的源码开始来分析一下整个保存局部变量的过程。</p>
+<h4 id="set方法"><a href="#set方法" class="headerlink" title="set方法"></a>set方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> * Sets the current thread's copy of this thread-local variable</div><div class="line"> * to the specified value.  Most subclasses will have no need to</div><div class="line"> * override this method, relying solely on the &#123;<span class="doctag">@link</span> #initialValue&#125;</div><div class="line"> * method to set the values of thread-locals.</div><div class="line"> *</div><div class="line"> * <span class="doctag">@param</span> value the value to be stored in the current thread's copy of</div><div class="line"> *        this thread-local.</div><div class="line"> */</div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span><span class="params">(T value)</span> </span>&#123;</div><div class="line">    Thread t = Thread.currentThread();</div><div class="line">    ThreadLocalMap map = getMap(t);</div><div class="line">    <span class="keyword">if</span> (map != <span class="keyword">null</span>)</div><div class="line">        map.set(<span class="keyword">this</span>, value);</div><div class="line">    <span class="keyword">else</span></div><div class="line">        createMap(t, value);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>方法的注释是“将当前线程的本地变量设置为指定的值，大多数的子类不需要重写这个方法，仅仅靠initialValue方法设置本地线程变量的初始值”。</p>
+<p>从注释中我们可以获得两个信息，一个是<strong>这个set方法可以用来设置需要保存的局部变量，且这个方法一般不需要重写</strong>，还有一个是<strong>有一个initialValue方法可以重写，用来设置局部变量的初始值</strong>。</p>
+<p>ThreadLocal对象调用set方法时，首先传入了一个泛型类型的value参数，set方法内执行了如下操作：</p>
+<ol>
+<li>获取当前ThreadLocal对象所在的线程t</li>
+<li><strong>获取当前线程对象t的成员对象threadLocals</strong>，它是一个ThreadLocalMap对象map，这显然是一个key-value类型的数据结构</li>
+<li>如果map不为空，则直接将当前ThreadLocal对象作为key，要存储的泛型value作为value存储到已存在的map对象中</li>
+<li>如果map为空，则初始化这个map对象，注意初始化的不是现在这个方法内的局部变量map，而是线程t内的成员对象threadLocals（这里也就直接说明线程的局部变量是存储在每个线程内部，而不是ThreadLocal对象内部）初始化ThreadLocalMap对象的语句是 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">createMap</span><span class="params">(Thread t, T firstValue)</span> </span>&#123;</div><div class="line">    t.threadLocals = <span class="keyword">new</span> ThreadLocalMap(<span class="keyword">this</span>, firstValue);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>上述set方法内部的过程中执行到2步骤之后，根据线程内部的ThreadLocalMap成员map是否为null分为两种情况，<strong>不为null则执行ThreadLocalMap对象的set方法</strong>，<strong>为null则</strong>初始化ThreadLocalMap对象，即<strong>调用ThreadLocalMap的构造方法</strong>，即对set方法来说，在ThreadLocal内的操作到此为止，而剩余的对数据的操作则封装在ThreadLocalMap类中。</p>
+<p>显然，调用这个方法后，如果当前线程本身的threadLocalMap成员没有初始化，则会被初始化该成员并将当前ThreadLocal对象和传入的value作为key-value对存储到该成员对象里；如果该ThreadLocalMap成员对象已经存在，则会直接进行存储操作。</p>
+<p>具体的存储和初始化操作实现封装在ThreadLocalMap类内部，后面再详细说明。</p>
+<p>接下来看一下get方法。</p>
+<h4 id="get"><a href="#get" class="headerlink" title="get"></a>get</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> * Returns the value in the current thread's copy of this</div><div class="line"> * thread-local variable.  If the variable has no value for the</div><div class="line"> * current thread, it is first initialized to the value returned</div><div class="line"> * by an invocation of the &#123;<span class="doctag">@link</span> #initialValue&#125; method.</div><div class="line"> *</div><div class="line"> * <span class="doctag">@return</span> the current thread's value of this thread-local</div><div class="line"> */</div><div class="line"><span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">()</span> </span>&#123;</div><div class="line">    Thread t = Thread.currentThread();</div><div class="line">    ThreadLocalMap map = getMap(t);</div><div class="line">    <span class="keyword">if</span> (map != <span class="keyword">null</span>) &#123;</div><div class="line">        ThreadLocalMap.Entry e = map.getEntry(<span class="keyword">this</span>);</div><div class="line">        <span class="keyword">if</span> (e != <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">return</span> (T)e.value;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> setInitialValue();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>与set方法一样，刚开始先获取了当前线程，然后通过当前线程对象t获取到t内的threadLocalMap对象，如果获取到的ThreadLocalMap对象不为空并且该map通过当前ThreadLocal对象获取的value不为空，则返回以当前ThreadLocal对象为key存储在map中的value，否则返回setInitialValue方法的返回值。</p>
+<p>这个方法甚至不需要传参，默认获取当前线程内的threadLocalMap对象，然后获取以调用get方法的threadLocalMap对象为key的value。</p>
+<p>一个set一个get，也就完成了线程局部变量的存储和取值过程。当然，具体的获取值的过程（map.getEntry）仍然是封装在ThreadLocalMap类内部的。</p>
+<p>这里要注意的是，如果通过当前线程获取到的threadLocalMap对象为null或者通过当前ThreadLocal对象获取的value为null，就会调用到setInitialValue方法，当前线程内的threadLocalMap对象为null说明在进行了get方法之前并没有set值进去，这时就会返回一个默认值，这个默认值就与setInitialValue方法有关。</p>
+<h4 id="initialValue"><a href="#initialValue" class="headerlink" title="initialValue"></a>initialValue</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> T <span class="title">initialValue</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> T <span class="title">setInitialValue</span><span class="params">()</span> </span>&#123;</div><div class="line">    T value = initialValue();</div><div class="line">    Thread t = Thread.currentThread();</div><div class="line">    ThreadLocalMap map = getMap(t);</div><div class="line">    <span class="keyword">if</span> (map != <span class="keyword">null</span>)</div><div class="line">        map.set(<span class="keyword">this</span>, value);</div><div class="line">    <span class="keyword">else</span></div><div class="line">        createMap(t, value);</div><div class="line">    <span class="keyword">return</span> value;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>正如方法的注释所说，setInitialValue方法就是一个变异的set方法，整个setInitialValue方法内部源码只有第一句和最后一句与set方法不同，第一句从 initialValue方法里获取一个初始化值，最后一句将这个初始化值返回出去，其他语句与set方法内完全相同。</p>
+<p>结合get方法内的逻辑不难理解，这个方法就是在类似于用户没有set过值就直接调用get方法的时候返回一个默认值，并将这个默认值set到线程的threadLocalMap对象中。</p>
+<p>要注意的是这个方法是private的，当然，源码上提供了另一个protected的方法，也就是initialValue方法，这个显然就是留给我们覆写用的，需要改变初始化值的时候只需要重写这个方法并改变return后的值即可，当然也可以不重写，可以从源码看到默认的初始化值为null。</p>
+<p>重写一般是下面这种匿名类的形式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ThreadLocal&lt;Integer&gt; threadLocal = <span class="keyword">new</span> ThreadLocal&lt;Integer&gt;()&#123;</div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">protected</span> Integer <span class="title">initialValue</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">    &#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>根据对以上几个方法源码的分析，不难发现最终对局部变量的存储、取值的具体实现都是封装在ThreadLocalMap类中的。</p>
+<h4 id="Entry"><a href="#Entry" class="headerlink" title="Entry"></a>Entry</h4><p>分析ThreadLocalMap之前先看一下Entry。Entry是在ThreadLocalMap存取过程中作为元素的实体类，在整个ThreadLocal系列功能中作用巨大，ThreadLocal进行set或get操作时，最终操作的都是以当前ThreadLocal对象作为key、set要存储或get要取出的元素作为value存储的entry对象，它的实现很简单但是很有意思：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadLocal</span>&lt;<span class="title">T</span>&gt; </span>&#123;</div><div class="line">    ...(其他代码)...</div><div class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadLocalMap</span> </span>&#123;</div><div class="line">        ....（其他代码）...</div><div class="line">        <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Entry</span> <span class="keyword">extends</span> <span class="title">WeakReference</span>&lt;<span class="title">ThreadLocal</span>&gt; </span>&#123;</div><div class="line">            <span class="comment">/** The value associated with this ThreadLocal. */</span></div><div class="line">            Object value;</div><div class="line"></div><div class="line">            Entry(ThreadLocal k, Object v) &#123;</div><div class="line">                <span class="keyword">super</span>(k);</div><div class="line">                value = v;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        ...（其他代码）....</div><div class="line">    &#125;</div><div class="line">    ...（其他代码）....</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到虽然这是个用于存储的实体类，但是它继承的是WeakReference（弱引用）类，并且泛型里传入的是ThreadLocal类，也就是<strong>Entry类本质上是一个只接受ThreadLocal类对象的弱引用类</strong>，它是怎么把这样一个弱引用类做成一个可以存储key-value对的实体类的呢？</p>
+<p>通过Entry类的构造函数，可以传入一个作为k（键）的ThreadLocal对象和一个作为v（值）的Object对象，key被传入父类的构造函数中，而v的值被赋值给了Entry唯一的属性成员value。</p>
+<p>前面已经说过，Entry父类是WeakReference，所以k传入了父类的构造函数也就是传入了WeakReference的构造函数，这里弱引用的使用方法可以顺便复习一下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//refrence作为一个WeakReference对象，持有t对象的弱引用</span></div><div class="line">WeakReference&lt;T&gt; refrence = <span class="keyword">new</span> WeakRefrence&lt;T&gt;(T t);</div><div class="line"><span class="comment">//通过WeakReference对象的get方法可以获取到该弱引用引用的对象</span></div><div class="line">refrence.get();</div></pre></td></tr></table></figure>
+<p>由此可见通过将k传入父类构造函数，正在实例化的Entry对象实质上成了一个持有k对象弱引用的WeakReference对象，通过entry.get()可以获得所引用的ThreadLocal对象；而这个Entry对象的value属性则存储了ThreadLocal对象传进来的线程局部变量，这是个强引用，通过entry.value可以获取到这个局部变量值。</p>
+<p>弱引用的特点是其所持有的对象只能存活到下次垃圾回收启动之前，如果下次gc启动的时候该entry对象持有的ThreadLocal对象没有被其他地方引用，则会直接被回收，到时使用entry.get()就会获取到一个null值，但此时value可能仍然存活在这个entry对象中，但此时这个entry对象已经无法通过key取值，也就成了一个无效entry。作为一个存储工具类，ThreadLocalMap有一定的策略不定期对这些无效元素进行清理以保证空间不会最终被无效元素占满。</p>
+<h4 id="ThreadLocalMap"><a href="#ThreadLocalMap" class="headerlink" title="ThreadLocalMap"></a>ThreadLocalMap</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadLocalMap</span> </span>&#123;</div><div class="line">    ....（部分代码）....</div><div class="line">    <span class="comment">/**</span></div><div class="line">     * 初始化存储表的大小，必须为2次幂，默认为16（思考：为什么必须为2的幂？）</div><div class="line">     */</div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> INITIAL_CAPACITY = <span class="number">16</span>;</div><div class="line">    <span class="comment">/**</span></div><div class="line">     * 存储表，必要时可以扩容</div><div class="line">     */</div><div class="line">    <span class="keyword">private</span> Entry[] table;</div><div class="line"></div><div class="line">    <span class="comment">/**</span></div><div class="line">     * 表中存储的实体数量</div><div class="line">     */</div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> size = <span class="number">0</span>;</div><div class="line">    <span class="comment">/**</span></div><div class="line">     * 每次扩容后的阈值</div><div class="line">     */</div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> threshold; <span class="comment">// Default to 0</span></div><div class="line">    <span class="comment">/**</span></div><div class="line">     * 设置新容量的阈值，保持最坏情况下为2/3的负载因子</div><div class="line">     */</div><div class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">setThreshold</span><span class="params">(<span class="keyword">int</span> len)</span> </span>&#123;</div><div class="line">        threshold = len * <span class="number">2</span> / <span class="number">3</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">/**</span></div><div class="line">     * 构造函数</div><div class="line">     */</div><div class="line">    ThreadLocalMap(ThreadLocal firstKey, Object firstValue) &#123;</div><div class="line">        table = <span class="keyword">new</span> Entry[INITIAL_CAPACITY];</div><div class="line">        <span class="keyword">int</span> i = firstKey.threadLocalHashCode &amp; (INITIAL_CAPACITY - <span class="number">1</span>);</div><div class="line">        table[i] = <span class="keyword">new</span> Entry(firstKey, firstValue);</div><div class="line">        size = <span class="number">1</span>;</div><div class="line">        setThreshold(INITIAL_CAPACITY);</div><div class="line">    &#125;</div><div class="line">    .....(其他暂时无关代码).....</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>首先，这个ThreadLocalMap类是在ThreadLocal类内部的静态内部类，但是ThreadLocal内部并没有使用它，唯一使用到它的位置就是Thread类内。</p>
+<p>这个类的注释是这样说的：“ThreadLocalMap是一个自定义的专用于存储线程局部变量的hash map，类是包级私有的，允许在Thread类中声明。”可见这个类是专用于ThreadLocal类的相关操作的，那么把它作为ThreadLocal类的静态内部类也不难理解了。</p>
+<p>经过对ThreadLocal类源码的分析我们知道，调用了ThreadLocal对象的set方法后，方法内最后会调用到ThreadLocalMap对象的set或构造函数。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span><span class="params">(T value)</span> </span>&#123;</div><div class="line">    Thread t = Thread.currentThread();</div><div class="line">    ThreadLocalMap map = getMap(t);</div><div class="line">    <span class="keyword">if</span> (map != <span class="keyword">null</span>)</div><div class="line">        map.set(<span class="keyword">this</span>, value);</div><div class="line">    <span class="keyword">else</span></div><div class="line">        createMap(t, value);</div><div class="line">&#125;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">createMap</span><span class="params">(Thread t, T firstValue)</span> </span>&#123;</div><div class="line">    t.threadLocals = <span class="keyword">new</span> ThreadLocalMap(<span class="keyword">this</span>, firstValue);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ThreadLocalMap的构造方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">ThreadLocalMap(ThreadLocal firstKey, Object firstValue) &#123;</div><div class="line">    table = <span class="keyword">new</span> Entry[INITIAL_CAPACITY];</div><div class="line">    <span class="keyword">int</span> i = firstKey.threadLocalHashCode &amp; (INITIAL_CAPACITY - <span class="number">1</span>);</div><div class="line">    table[i] = <span class="keyword">new</span> Entry(firstKey, firstValue);</div><div class="line">    size = <span class="number">1</span>;</div><div class="line">    setThreshold(INITIAL_CAPACITY);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>ThreadLocalMap对象初始化的时候和直接调用map.set时传入的参数相同，都是以当前threadLocal对象为key存储线程局部变量。</p>
+<p>构造函数做了下面几件事：</p>
+<ol>
+<li>初始化一个用于存储key-value对的大小为16的数组</li>
+<li>通过获取当前threadLocals对象的哈希码映射到数组的下标</li>
+<li>将ThreadLocal对象和局部变量作为key-value初始化一个Entry实例并存储到数组里之前哈希映射到的位置里</li>
+<li>以默认的存储大小16设置阈值</li>
+</ol>
+<p>简单地说就是开辟了一块连续的存储空间，然后使用哈希码的方式获取数组下标（思考：如何获取？），然后将存储key-value的实体对象存入对应下标的位置。</p>
+<p>结合前面对ThreadLocal中方法的分析，ThreadLocalMap对象初始化的时候总会有key-value对传进来，这个key-value对或者是由ThreadLocal对象的set方法传进来的，或者是threadLocalMap对象尚未初始化时直接调用get方法的时候通过setInitialValue方法传进来的默认值。</p>
+<p>再看一下set方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">set</span><span class="params">(ThreadLocal key, Object value)</span> </span>&#123;</div><div class="line">        Entry[] tab = table;</div><div class="line">        <span class="keyword">int</span> len = tab.length;</div><div class="line">        <span class="keyword">int</span> i = key.threadLocalHashCode &amp; (len-<span class="number">1</span>);</div><div class="line"></div><div class="line">        <span class="keyword">for</span> (Entry e = tab[i];</div><div class="line">             e != <span class="keyword">null</span>;</div><div class="line">             e = tab[i = nextIndex(i, len)]) &#123;</div><div class="line">            ThreadLocal k = e.get();</div><div class="line"></div><div class="line">            <span class="keyword">if</span> (k == key) &#123;</div><div class="line">                e.value = value;</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">if</span> (k == <span class="keyword">null</span>) &#123;</div><div class="line">                replaceStaleEntry(key, value, i);</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        tab[i] = <span class="keyword">new</span> Entry(key, value);</div><div class="line">        <span class="keyword">int</span> sz = ++size;</div><div class="line">        <span class="keyword">if</span> (!cleanSomeSlots(i, sz) &amp;&amp; sz &gt;= threshold)</div><div class="line">            rehash();</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>先用一个局部变量获取到构造函数中初始化好的表，然后同样通过ThreadLocal对象的哈希码和表长度获取一个下标i，注意这步操作是在构造函数和set方法中都有的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> len = tab.length;</div><div class="line"><span class="keyword">int</span> i = key.threadLocalHashCode &amp; (len-<span class="number">1</span>);</div></pre></td></tr></table></figure>
+<p>i就是通过ThreadLocal对象的hash码和数组长度相与得到的一个下标值。接下来是一个循环，循环首先取出下标志i取出对应位置的entry对象，如果该对象不为null，则取出该entry的key（即曾经存储在这个entry中的ThreadLocal对象）：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ThreadLocal k = e.get();</div></pre></td></tr></table></figure></p>
+<p>然后对该key与当前正在进行set操作的ThreadLocal对象进行比较，如果完全相同，说明是进行了类似于以同一个ThreadLocal对象set了两个不同的值的操作，那么ThreadLocalMap的处理就是直接覆盖之前的旧value，然后方法返回：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (k == key) &#123;</div><div class="line">    e.value = value;</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>而如果通过i取出的entry对象取出的key为null（思考：为什么会有存储在ThreadLocalMap对象中的entry实体中的key为null？）：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (k == <span class="keyword">null</span>) &#123;</div><div class="line">    replaceStaleEntry(key, value, i);</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>则调用到replaceStaleEntry方法，进行一次将map中已存的不在hash码对应位置的元素向正确位置移动的操作（如果有这个必要的话）并返回，也可能并没有移动元素的操作，没有移动元素则直接将这个key为null的entry的value也置为null，然后将新的key-value对初始化一个新的entry对象放置到这个位置，最后进行一次清除废弃元素的操作，然后replaceStaleEntry方法返回，然后当前的set方法也返回。</p>
+<p>而循环中时，如果从循环到的当前i位置取出的entry对象为null，则跳出循环，执行下面的语句：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">tab[i] = <span class="keyword">new</span> Entry(key, value);</div><div class="line"><span class="keyword">int</span> sz = ++size;</div><div class="line"><span class="keyword">if</span> (!cleanSomeSlots(i, sz) &amp;&amp; sz &gt;= threshold)</div><div class="line">    rehash();</div></pre></td></tr></table></figure></p>
+<p>在i位置初始化一个以当前ThreadLocal对象为key、线程局部变量为value的entry对象,然后将记录表中存储的实体数目的size数量加一，如果不再有无用的元素可以从表里清除（cleanSomeSlots方法）、且当前存储的实体数目已经超过了2/3的阈值（sz&gt;=threshold），则进行rehash操作——将存储表扩容为原先长度的两倍，且将旧表中的元素存储到新表中。</p>
+<p>以上即是对应于ThreadLocal对象的set方法的ThreadLocalMap中的set方法的分析，接下来对应于ThreadLocal的get方法，ThreadLocalMap实现了一个getEntry方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> Entry <span class="title">getEntry</span><span class="params">(ThreadLocal key)</span> </span>&#123;</div><div class="line">    <span class="keyword">int</span> i = key.threadLocalHashCode &amp; (table.length - <span class="number">1</span>);</div><div class="line">    Entry e = table[i];</div><div class="line">    <span class="keyword">if</span> (e != <span class="keyword">null</span> &amp;&amp; e.get() == key)</div><div class="line">        <span class="keyword">return</span> e;</div><div class="line">    <span class="keyword">else</span></div><div class="line">        <span class="keyword">return</span> getEntryAfterMiss(key, i, e);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>相比于set方法，getEntry方法表面看起来简洁的多，同样是先通过传入的ThreadLocal对象的hashCode和存储表的长度获取对应于这个hash码的坐标i，然后从表中取出i位置的entry实体e，如果e不为null且e.get获取到的ThreadLocal对象与参数中的ThreadLocal对象相同，则直接将e返回（思考：为什么调用e.get来获取作为key存储到Entry对象中的ThreadLocal对象）；如果不符合前面的判断条件，则会调用到getEntryAfterMiss(key, i, e)方法。</p>
+<p>方法名字很通俗易懂，这是一个aftermiss（错过后）的时候调用的方法，为什么还要在错过后有这样一个处理？就像前面在set方法分析的时候看到的，一个线程局部变量值在存储的时候未必会恰好存储在对应的ThreadLocal的hash码与存储表长度相与所得到的位置，ThreadLocalMap包容两个ThreadLocal对象的hash码相撞的情况并提供了支持，一个元素根据key的hash码得到的位置处如果已经有了一个有效元素（元素的key不为null），则这个元素会往正确位置的后方寻找空位或存储着无效元素的位置。</p>
+<p>所以getEntry方法会在第一次根据hash码获取到的下标没有获取到正确元素的情况下做了一手补救措施，也就是getEntryAfterM<br>iss方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> Entry <span class="title">getEntryAfterMiss</span><span class="params">(ThreadLocal key, <span class="keyword">int</span> i, Entry e)</span> </span>&#123;</div><div class="line">    Entry[] tab = table;</div><div class="line">    <span class="keyword">int</span> len = tab.length;</div><div class="line"></div><div class="line">    <span class="keyword">while</span> (e != <span class="keyword">null</span>) &#123;</div><div class="line">        ThreadLocal k = e.get();</div><div class="line">        <span class="keyword">if</span> (k == key)</div><div class="line">            <span class="keyword">return</span> e;</div><div class="line">        <span class="keyword">if</span> (k == <span class="keyword">null</span>)</div><div class="line">            expungeStaleEntry(i);</div><div class="line">        <span class="keyword">else</span></div><div class="line">            i = nextIndex(i, len);</div><div class="line">        e = tab[i];</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个方法传入了作为key的ThreadLocal对象、根据ThreadLocal对象的hash码求出的存储表下标、以及在该下标位置获取到的实体对象。</p>
+<p>方法内首先获取了存储表和表长度，然后判断传入的entry对象是否为null，如果不为null则进入循环，为null则直接返回null。这个地方我绕了一段时间，之前没想明白<strong>为什么作为一个错失entry后补救的方法发现传入的entry是null就直接返回null了，不应该往后遍历寻找一下相同ThreadLocal为key但是因为hash碰撞而没有放到正确位置的entry实体吗？</strong></p>
+<p>后来想了一下，结合之前的set方法，entry放入map的时候大概有下面几种情况：</p>
+<ul>
+<li>hash码对应的正确位置为null，这是最理想的，可以直接将entry放进正确位置，此时<strong>正确位置不为null且存储着当前entry</strong></li>
+<li>hash码与之前的某个存入map的元素得到的位置相同，且之前的元素还是有效的，这时这个新的entry进行set操作的时候就要从正确位置<strong>往后</strong>寻找为entry为null或者entry中的key为null的位置再进行插入操作，此时<strong>正确位置不为null但存储着以前的尚且有效的entry</strong></li>
+<li>hash码与之前的某个存入map的元素得到的位置相同，但之前的元素的key已经失效了（为null），此时当前entry进行set操作的时候就会直接将这个新值放到正确的位置，此时<strong>正确位置不为null且存储着当前的entry</strong></li>
+</ul>
+<p>可见根据ThreadLocalMap的set方法的实现，如果正确位置为null，确实可以直接返回null；而如果正确位置不为null，则可能存储着当前需要获取到的entry或者是发生hash碰撞的不正确的entry。这里又有下面几种情况：</p>
+<ul>
+<li><p>正确位置存储着不正确的entry，且在上次get/set方法后到目前时刻这个不正确的entry仍然有效（key不为null）</p>
+<p>这种情况没有办法，正确的元素肯定不在这里，只能往后找，取下一个坐标，然后获取到entry继续以新获取的entry循环</p>
+</li>
+<li><p>正确位置存储着正确的entry，且从上一次get/set方法后到目前时刻这个entry仍然有效</p>
+<p>这当然是我们最喜欢的情况，但是执行到这里的都不存在这种情况，只能是循环到后面的元素出现找到对应key的entry，直接将这个entry返回</p>
+</li>
+<li><p>正确位置存储着不正确的entry，且在上次get/set方法后这个entry已经失效了</p>
+<p>这种情况会调用清除失效元素的方法，这个方法会将占据着当前位置的无效元素清理掉并将遍历到的有效entry进行rehash，使entry向正确位置靠近，然后e引用到新的当前位置的元素，进行下一轮循环，直到遍历到为null的元素。</p>
+</li>
+</ul>
+<p>通过getEntry和getEntryAfterMiss方法，ThreadLocalMap完成了从map中通过ThreadLocal对象获取线程局部变量的逻辑，整个ThreadLocalMap这一层的变量存取过程也基本讲述清楚。</p>
+<p>还有一些处理我将它们作为更深的一层来分析，也就是前面没有详细分析的ThreadLocalMap的几个功能性的方法和Entry实体类。</p>
+<h5 id="replaceStaleEntry"><a href="#replaceStaleEntry" class="headerlink" title="replaceStaleEntry"></a>replaceStaleEntry</h5><p>这个方法出现在ThreadLocalMap的set方法源码中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">set</span><span class="params">(ThreadLocal key, Object value)</span> </span>&#123;</div><div class="line"></div><div class="line">    Entry[] tab = table;</div><div class="line">    <span class="keyword">int</span> len = tab.length;</div><div class="line">    <span class="keyword">int</span> i = key.threadLocalHashCode &amp; (len-<span class="number">1</span>);</div><div class="line"></div><div class="line">    <span class="keyword">for</span> (Entry e = tab[i];</div><div class="line">         e != <span class="keyword">null</span>;</div><div class="line">         e = tab[i = nextIndex(i, len)]) &#123;</div><div class="line">        ThreadLocal k = e.get();</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (k == key) &#123;</div><div class="line">            e.value = value;</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (k == <span class="keyword">null</span>) &#123;</div><div class="line">            replaceStaleEntry(key, value, i);</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    ........</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>根据之前的分析，这个方法调用的时机是在调用set方法时要存储的元素与旧元素发生hash碰撞（根据hash码求出的坐标相同）、当前entry在向正确位置后方依次寻找可以插入的位置时检测到有key失效的元素的时候。结合方法名，不难看出这个方法是为了将无效的旧元素替换掉，具体怎么替换呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">replaceStaleEntry</span><span class="params">(ThreadLocal key, Object value,</span></span></div><div class="line">                               <span class="keyword">int</span> staleSlot) &#123;</div><div class="line">    Entry[] tab = table;</div><div class="line">    <span class="keyword">int</span> len = tab.length;</div><div class="line">    Entry e;</div><div class="line"></div><div class="line">    <span class="comment">// 从参数传入的位置往前查找失效的元素并用slotToExpunge标记位置</span></div><div class="line">    <span class="keyword">int</span> slotToExpunge = staleSlot;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = prevIndex(staleSlot, len);</div><div class="line">         (e = tab[i]) != <span class="keyword">null</span>;</div><div class="line">         i = prevIndex(i, len))</div><div class="line">        <span class="keyword">if</span> (e.get() == <span class="keyword">null</span>)</div><div class="line">            slotToExpunge = i;</div><div class="line"></div><div class="line">    <span class="comment">// 从参数传入的位置向后找相同的key或为null的元素，以首先出现的为准</span></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = nextIndex(staleSlot, len);</div><div class="line">         (e = tab[i]) != <span class="keyword">null</span>;</div><div class="line">         i = nextIndex(i, len)) &#123;</div><div class="line">        ThreadLocal k = e.get();</div><div class="line"></div><div class="line">        <span class="comment">// 找到了相同的key，说明这个元素是之前发生hash碰撞的时候向后移动存储到了正确位置往后的</span></div><div class="line">        <span class="comment">// 位置，现在就可以将这个元素与staleSlot位置的元素交换位置，当然这个staleSlot位置仍然未// 必是对应其hash码的正确位置，但是无论如何是向着正确的位置移动了一部分</span></div><div class="line">        <span class="keyword">if</span> (k == key) &#123;</div><div class="line">            e.value = value;</div><div class="line"></div><div class="line">            tab[i] = tab[staleSlot];</div><div class="line">            tab[staleSlot] = e;</div><div class="line"></div><div class="line">            <span class="comment">// 判断如果之前向前查找失效元素没有找到，就将交换后持有失效元素的i位置赋值给slotToE// xpunge作为失效元素位置的标记</span></div><div class="line">            <span class="keyword">if</span> (slotToExpunge == staleSlot)</div><div class="line">                slotToExpunge = i;</div><div class="line">            <span class="comment">//对标记位置的失效元素进行清理</span></div><div class="line">            cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// 如果在之前向前查找失效元素的时候没有找到（slotToExpung的位置没有变化），则标记</span></div><div class="line">        <span class="comment">// 向后找到的第一个失效元素的位置</span></div><div class="line">        <span class="keyword">if</span> (k == <span class="keyword">null</span> &amp;&amp; slotToExpunge == staleSlot)</div><div class="line">            slotToExpunge = i;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// 跳出了循环，说明循环到了为null的元素，说明后面不存在相同key的元素（思考：为什么？），则</span></div><div class="line">    <span class="comment">// 直接在参数传入的位置处实例化一个新的entry实例存储当前线程局部变量，参数传入位置的无效元</span></div><div class="line">    <span class="comment">// 素也就被覆盖为当前有效元素</span></div><div class="line">    tab[staleSlot].value = <span class="keyword">null</span>;</div><div class="line">    tab[staleSlot] = <span class="keyword">new</span> Entry(key, value);</div><div class="line"></div><div class="line">    <span class="comment">// 如果slotToExpunge与参数传入的位置不同，说明当前存储列表中还有其他的失效元素，调用</span></div><div class="line">    <span class="comment">// cleanSomeSlots方法清理无效元素</span></div><div class="line">    <span class="keyword">if</span> (slotToExpunge != staleSlot)</div><div class="line">        cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>代码注释里写的分析比较详细了，首先这个方法的调用情景是进行set操作时发生哈希碰撞后、元素在从正确的hash位置向后遍历寻找可以插入的位置的时候遍历到了key为null的位置的时候调用（遍历到key相同的位置直接覆盖value，遍历到key不同且有效的位置继续循环，遍历到元素为null的位置直接初始化entry存入）。</p>
+<p>在key为null的位置处就可以直接将值保存进去了吗？事实是我们可能在set当前值之前曾经set过另一个key相同的值，那个值也发生过hash碰撞，并且当时现在这个key为nul的位置key还有效，所以那个值可能存在当前位置的后面。所以源码中继续做了一个向后遍历的循环，用来查找当前位置后面的key值相同的元素，直到查找到为null的元素，则不再查找，直接将元素插入到当前这个key为null的位置；而查找到了key相同的元素，就将该元素与当前这个key为nul的元素交换位置。</p>
+<p>这里有个问题是，为什么这个方法里遍历到为null的元素就可以确保null元素的后面不存在key相同的元素？这涉及到整个存储过程，我们在调用set方法根据hash码存储元素的时候有下面几种情况：</p>
+<ul>
+<li>hash码对应位置的元素为null，直接将元素存到该位置</li>
+<li>hash码对应位置的元素不为null，但key与要存储的元素的key相同，直接覆盖该位置元素的value</li>
+<li>hash码对应位置的元素不为null，但key为null，向后遍历，如果遍历到为null的entry就直接将key为null的entry换为当前要保存的entry；遍历到key相同的元素就将该元素与key为null的元素交换位置</li>
+<li>hash码对应位置的元素不为null，且key与要存储的元素的key不同，坐标位置移向下一位，用新的位置的元素再次进行上面的判断，步骤和上面相同，将上面的“hash码对应位置”换成“新位置”</li>
+</ul>
+<p>在这样的存储策略下，如果调用到replaceStaleEntry方法，则必然在向后查找相同key时不会出现null（否则就应该在set方法里直接跳出循环在null的位置存储新元素了）。</p>
+<p>在方法里记录了一个slotToExpunge标记，用于调用expungeStaleEntry方法。</p>
+<h5 id="expungeStaleEntry"><a href="#expungeStaleEntry" class="headerlink" title="expungeStaleEntry"></a>expungeStaleEntry</h5><p>除了replaceStaleEntry方法中，其实在之前的getEntryAfterMiss方法中也有对expungeStaleEntry方法的调用，字面上看，这个方法的作用就是删除无效元素。在replaceStaleEntry方法中，传入expungeStaleEntry方法的参数是标记的除要交换元素外的无效元素位置，看一下源码的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//删除一个无效元素，并在该无效元素的位置直到下一个元素为null的位置之间进行rehash</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">expungeStaleEntry</span><span class="params">(<span class="keyword">int</span> staleSlot)</span> </span>&#123;</div><div class="line">    Entry[] tab = table;</div><div class="line">    <span class="keyword">int</span> len = tab.length;</div><div class="line"></div><div class="line">    <span class="comment">// 删除无效元素</span></div><div class="line">    tab[staleSlot].value = <span class="keyword">null</span>;</div><div class="line">    tab[staleSlot] = <span class="keyword">null</span>;</div><div class="line">    size--;</div><div class="line"></div><div class="line">    <span class="comment">// 遍历直到下一个元素为null的位置，遇到无效元素就删除，有效元素rehash</span></div><div class="line">    Entry e;</div><div class="line">    <span class="keyword">int</span> i;</div><div class="line">    <span class="keyword">for</span> (i = nextIndex(staleSlot, len);</div><div class="line">         (e = tab[i]) != <span class="keyword">null</span>;</div><div class="line">         i = nextIndex(i, len)) &#123;</div><div class="line">        ThreadLocal k = e.get();</div><div class="line">        <span class="keyword">if</span> (k == <span class="keyword">null</span>) &#123;</div><div class="line">            e.value = <span class="keyword">null</span>;</div><div class="line">            tab[i] = <span class="keyword">null</span>;</div><div class="line">            size--;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            <span class="keyword">int</span> h = k.threadLocalHashCode &amp; (len - <span class="number">1</span>);</div><div class="line">            <span class="keyword">if</span> (h != i) &#123;</div><div class="line">                tab[i] = <span class="keyword">null</span>;</div><div class="line">                <span class="comment">//（？有个疑问：为什么这里不对元素有效性做判断？为什么不在扫描到无效元素的时候就存</span></div><div class="line">                <span class="comment">//放进去、而是在元素为null的时候才放进去？）</span></div><div class="line">                <span class="keyword">while</span> (tab[h] != <span class="keyword">null</span>)</div><div class="line">                    h = nextIndex(h, len);</div><div class="line">                tab[h] = e;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> i;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到方法的作用正像之前说的，删除了标记位置的无效元素，但是又不限于此，方法在<strong>删除标记的无效元素后还向后遍历，将标记位后面的无效元素也删除，对有效元素进行rehash（降低了之后添加进来的元素发生hash碰撞的几率），直到碰到一个元素为null的位置。</strong></p>
+<p>注意这个方法在get和set方法中都有被调用到的机会，结合之前对get和set的分析，有下面几种调用到expungeStaleEntry方法的情景：</p>
+<ul>
+<li>调用set方法时除了碰到key相同的元素直接替换的情况，其他情况（直接插入元素为null的位置、遍历到key失效的位置）都会调用到这个方法</li>
+<li>调用get方法时，除了可以直接根据ThreadLocal取出正确的entry、或没有直接通过传入的ThreadLocal对象获取到entry但是在向后遍历时查找到了key相同的entry的情况，其他情况（也就是查找到了key失效的entry的情况）会调用到这个方法。</li>
+</ul>
+<h5 id="cleanSomeSlots"><a href="#cleanSomeSlots" class="headerlink" title="cleanSomeSlots"></a>cleanSomeSlots</h5><p>有几处调用到expungeStaleEntry方法的地方，将expungeStaleEntry的返回值作为了cleanSomeSlots的参数。cleanSomeSlots的源码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">cleanSomeSlots</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">int</span> n)</span> </span>&#123;</div><div class="line">    <span class="keyword">boolean</span> removed = <span class="keyword">false</span>;</div><div class="line">    Entry[] tab = table;</div><div class="line">    <span class="keyword">int</span> len = tab.length;</div><div class="line">    <span class="keyword">do</span> &#123;</div><div class="line">        i = nextIndex(i, len);</div><div class="line">        Entry e = tab[i];</div><div class="line">        <span class="keyword">if</span> (e != <span class="keyword">null</span> &amp;&amp; e.get() == <span class="keyword">null</span>) &#123;</div><div class="line">            n = len;</div><div class="line">            removed = <span class="keyword">true</span>;</div><div class="line">            i = expungeStaleEntry(i);</div><div class="line">        &#125;</div><div class="line">    &#125; <span class="keyword">while</span> ( (n &gt;&gt;&gt;= <span class="number">1</span>) != <span class="number">0</span>);</div><div class="line">    <span class="keyword">return</span> removed;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个方法的方法名直译过来是“清理一些槽”，所谓槽其实就是指作为存储表的entry数组中的每一个entry。这里有个不太明白的地方就是在set方法中调用replaceStaleEntry方法时会在交换或者覆盖一个无效元素时调用这样一条语句：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);</div></pre></td></tr></table></figure>
+<p>根据先前对expungeStaleEntry方法的分析已经知道，expungeStaleEntry方法会清除参数位置的无效元素，并从参数位置往后遍历清除无效元素并对有效元素进行rehash，直到遍历到一个null元素，然后会将这个null元素的位置返回。</p>
+<p>从功能上来看，expungeStaleEntry方法显然也达到了“清理一些槽”的效果，那么（？为什么要将expungeStaleEntry方法的返回值作为参数再次调用cleanSomeSlots方法清理槽？二次清理会达到什么特定的效果吗？）这里是我所没有想明白的。</p>
+<p>暂时抛开这个疑问，这个方法的源码实现主要是一个do-while循环，也就是先执行循环体再做判断。方法的参数有两个，第一个参数传入了一个代表位置的数，按照注释说的，这应该是一个确保所持有元素不是无效元素的位置（也就是该位置的entry可以为有效元素，也可以为null，只要不是key无效的entry就好）；第二个参数比较神奇，源码里对它有两个不同的使用，一个是传入了存储表的长度len，一个是传入了表内的元素数量sz。</p>
+<p>循环内的代码首先用i取了i的下一个位置的元素，然后对该元素进行一次有效性判断，如果是无效的就使n等于存储表长度（？这一步操作的原因是什么？），将removed标志位置为true，然后将该位置作为参数调用expungeStaleEntry方法，并将该方法的返回值赋给i，然后进行循环条件判断。这个循环条件的判断很有意思，用了一个对n的移位运算，将n带符号位右移一位，判断不为0则继续下次循环。这个判断条件使循环次数取决于n的带符号位二进制数，我查阅了很多博客也没有弄明白为什么这么实现，只好暂且留下疑问，以后明白了再来填坑。</p>
+<p>总体来看这个方法实现的功能就是从第一个参数往后一个位置向后遍历，遍历次数是第二个参数带符号位右移直到为0的次数+1（do-while的特性使循环体执行次数比for多一次），中间如果遍历到无效的entry即会对该位置调用expungeStaleEntry方法清理该位置到下一个null位置中所有的失效元素并对这期间的有效元素进行rehash，然后再从null位置的下一个位置继续循环，循环条件会在遍历到无效entry的时候重新设置为存储表的原长度，然后判断带符号右移不为0继续循环（感觉是比expungeStaleEntry更彻底的一次大的清理活动）。</p>
+<h5 id="expungeStaleEntries"><a href="#expungeStaleEntries" class="headerlink" title="expungeStaleEntries"></a>expungeStaleEntries</h5><p>expungeStaleEntry方法的复数形式（滑稽），就是一个删除表中所有无效元素的方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">expungeStaleEntries</span><span class="params">()</span> </span>&#123;</div><div class="line">    Entry[] tab = table;</div><div class="line">    <span class="keyword">int</span> len = tab.length;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; len; j++) &#123;</div><div class="line">        Entry e = tab[j];</div><div class="line">        <span class="keyword">if</span> (e != <span class="keyword">null</span> &amp;&amp; e.get() == <span class="keyword">null</span>)</div><div class="line">            expungeStaleEntry(j);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>源码上就是一个对表中所有元素的遍历，对每一个遍历到的元素进行有效性判断，判断为无效就调用expungeStaleEntry方法进行清除，完全没有管expungeStaleEntry方法内部会对当前遍历到的位置直到下一个为null的位置进行一次清理，继续一个个元素遍历下去进行清理，我个人理解为时比cleanSomeSlots更彻底、更大规模的一个清理方法，整个ThreadLocal这一系列源码中唯一调用到这个方法的就是rehash方法内部。</p>
+<h5 id="rehash"><a href="#rehash" class="headerlink" title="rehash"></a>rehash</h5><p>之前提到过很多次rehash，需要说明一下这个方法和之前提的rehash不同，之前提的rehash是说在expungeStaleEntry方法中，在传入的参数（确保是一个无效元素）和下一个为null的元素的位置之间如果碰到有效元素则重新对其求下标、并尝试将其放到正确下标或离正确下标更近的位置的操作；而这个rehash方法只在set方法里有调用，在cleanSomeSlots方法返回了false且当前元素数已经大于了2/3的阈值的前提下，rehash方法会被调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">rehash</span><span class="params">()</span> </span>&#123;</div><div class="line">    expungeStaleEntries();</div><div class="line"></div><div class="line">    <span class="comment">// Use lower threshold for doubling to avoid hysteresis</span></div><div class="line">    <span class="keyword">if</span> (size &gt;= threshold - threshold / <span class="number">4</span>)</div><div class="line">        resize();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>方法中首先调用了expungeStaleEntris方法，经过之前的分析知道这个方法对所有元素进行了一个彻底的遍历和无效元素清理，在这次清理后又对元素数量进行了一次判断，注释写的是“使用较低的阈值避免滞后”，这里使阈值减去了本身的四分之一，如果经过一次彻底的清理后元素数量已经小于等于这个新的阈值就不需要进行更深一步的操作，否则就会调用到resize方法。</p>
+<h5 id="resize"><a href="#resize" class="headerlink" title="resize"></a>resize</h5><p>这个方法只在rehash中被调用，看源码之前我们可以先分析一下这个方法可能的作用，这个方法被调用是在rehash方法里，rehash被调用说明已经无法通过cleanSomeSlots程度的清理使元素数量降到2/3的阈值，而resize的调用说明进行了一次expungeStaleEntries级别的彻底的清理后仍然无法满足存储需求，在一个存储空间无法满足存储需求的时候调用的方法可能的作用是什么？正像方法名所描述的，resize（重新分配空间）,我理解为扩容。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">resize</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="comment">//获取旧的存储表和存储表长度</span></div><div class="line">    Entry[] oldTab = table;</div><div class="line">    <span class="keyword">int</span> oldLen = oldTab.length;</div><div class="line">    <span class="comment">//将存储表长度扩大两倍得到新的表长度</span></div><div class="line">    <span class="keyword">int</span> newLen = oldLen * <span class="number">2</span>;</div><div class="line">    <span class="comment">//新表</span></div><div class="line">    Entry[] newTab = <span class="keyword">new</span> Entry[newLen];</div><div class="line">    <span class="comment">//用于记录新表中元素的数量，最后将会赋值给size</span></div><div class="line">    <span class="keyword">int</span> count = <span class="number">0</span>;</div><div class="line">    <span class="comment">//遍历旧表，获取旧表元素，获取到无效元素则将value也赋值null帮助gc（？为什么不将元素也置为null？），获取到有效元素则通过元素的key的hashCode和新表的长度求得该元素在新表中的下标，然后通过和expungeStaleEntry方法中进行rehash的方法（注意不是前面的rehash（）方法）来将元素插入到新表中，同时用count记录表内元素数量</span></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; oldLen; ++j) &#123;</div><div class="line">        Entry e = oldTab[j];</div><div class="line">        <span class="keyword">if</span> (e != <span class="keyword">null</span>) &#123;</div><div class="line">            ThreadLocal k = e.get();</div><div class="line">            <span class="keyword">if</span> (k == <span class="keyword">null</span>) &#123;</div><div class="line">                e.value = <span class="keyword">null</span>; <span class="comment">// Help the GC</span></div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                <span class="keyword">int</span> h = k.threadLocalHashCode &amp; (newLen - <span class="number">1</span>);</div><div class="line">                <span class="keyword">while</span> (newTab[h] != <span class="keyword">null</span>)</div><div class="line">                    h = nextIndex(h, newLen);</div><div class="line">                newTab[h] = e;</div><div class="line">                count++;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">//设置新表的阈值</span></div><div class="line">    setThreshold(newLen);</div><div class="line">    <span class="comment">//将新的长度和表赋值到size和table上</span></div><div class="line">    size = count;</div><div class="line">    table = newTab;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>扩容的策略在源码上表示的很清楚，就是扩大两倍然后重新进行hash码&amp;表长度得到下标的运算，将旧表中尚且存在的有效元素引用到新表的新位置中，如果发生hash碰撞就直接向右侧移动到一个null位置再插入。</p>
+<p>这里对rehash过程中碰撞的处理和expungeStaleEntry中一样，相对set中对碰撞的处理显得比较轻量，具体为什么我还没有查阅到，大致的猜测是类似于expungeStaleEntry清理无效元素的过程中的rehash和扩容时的rehash时无效元素已经基本被清理了，不为null的位置大多为有效元素，所以为了提高效率直接向后方线性查找为null的位置插入元素就可以了；甚至resize过程中表容量扩展为原先的两倍，发生hash碰撞的几率应该极小极小，这么考虑的话从效率上看确实不需要在这里的进行太多对碰撞的处理。</p>
+<h4 id="ThreadLocalMap的hash存取和魔数0x61c88647"><a href="#ThreadLocalMap的hash存取和魔数0x61c88647" class="headerlink" title="ThreadLocalMap的hash存取和魔数0x61c88647"></a>ThreadLocalMap的hash存取和魔数0x61c88647</h4><p>前面ThreadLocalMap类中基本所有的方法都涉及到了一句关键的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> i = key.threadLocalHashCode &amp; (len-<span class="number">1</span>);</div></pre></td></tr></table></figure>
+<p>其中key是传入的ThreadLocal对象，len是存储表长度，i是通过key的threadLocalHashCode和表长度所得到的数组下标。</p>
+<p>接下来就看看ThreadLocal类的threadLocalHashCode：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> threadLocalHashCode = nextHashCode();</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> AtomicInteger nextHashCode =</div><div class="line">    <span class="keyword">new</span> AtomicInteger();</div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> HASH_INCREMENT = <span class="number">0x61c88647</span>;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">nextHashCode</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">return</span> nextHashCode.getAndAdd(HASH_INCREMENT);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这是一个final常量，也就是说只在初始化的时候赋值一次就不再变化，这说明每个ThreadLocal对象的threadLocalHashCode都是不变的（但可能不是唯一的，也就是发生了hash碰撞）,得到这个常量值是通过一个静态方法nextHashCode，这个方法返回nextHashCode.getAndAdd(HASH_INCREMENT)。</p>
+<p>nextHashCode是一个常量的原子整数对象，所有的ThreadLocal类对象共用这一个原子类对象，它的getAndAdd操作是一个原子操作，功能是原子性的获得当前原子对象的值并在这个值的基础上加上后面参数的值。整个ThreadLocal类中唯一需要进行线程同步的地方也通过这里的原子类操作解决了。</p>
+<p>原子整数初值为0，这个在ThreadLocal类加载到虚拟机中时就已经初始化好了，然后每初始化一个ThreadLocal实例，就会初始化一个threadLocalHashCode值，这个值通过静态方法nextHashCode获取值，nextHashCode方法会使类变量nextHashCode（这个变量名和方法名一样不要混淆了）在原值的基础上加上十六进制数0x61c88647，比如我初始化的第一个ThreadLocal对象的threadLocalHashCode是0+0x61c88647=0x61c88647，第二个ThreadLocal对象的threadLocalHashCode就是0x61c88647+0x61c88647=0xC3910C8E，这样就获得了每个ThreadLocal对象不变的hashCode。</p>
+<p>那么为什么是0x61c88647？</p>
+<p>这个数比较有意思，被称为“魔数”，怎么算出这个数的我也不是很清楚，只查阅到这个数与黄金比例和斐波那契数有关，而通过递加这个数所得到的hash码与存储表长度-1相与计算出的数组下标可以更好的分布在2的n次方大小的数组里。</p>
+<p>这里引用网上查到的对该数的一个测试：</p>
+<blockquote>
+<p>(take 16 (magic-hash 16))<br> (0 7 14 5 12 3 10 1 8 15 6 13 4 11 2 9)</p>
+<p>(take 32 (magic-hash 32))<br> (0 7 14 21 28 3 10 17 24 31 6 13 20 27 2 9 16 23 30 5 12 19 26 1 8 15 22 29 4 11 18 25)</p>
+<p>(take 64 (magic-hash 64))<br> (0 7 14 21 28 35 42 49 56 63 6 13 20 27 34 41 48 55 62 5 12 19 26 33 40 47 54 61 4 11 18 25 32 39 46 53 60 3 10 17 24 31 38 45 52 59 2 9 16 23 30 37 44 51 58 1 8 15 22 29 36 43 50 57)</p>
+</blockquote>
+<p>可以看到，这组数分别对16、32、64大小的数组进行了测试，通过递加魔数的方法最终获取到的下标确实是相对比较均匀的分布在整个数组中。</p>
+<p>这也就是为什么ThreadLocalMap的默认数组长度上注释写着“必须为2的次方数”，实质上求下标的时候并不是直接用数组长度与hash值相与，而是用数组长度减一相与，2的n次方减1也就是一个低n-1位都为1的二进制数，将它与hash值相与也就是取hash值的低n-1位，通过这种方式就能在数组里更好的分布并且在最大程度上减少hash碰撞的几率，提高效率。</p>
+<p>还有一个问题就是存取的时候为什么不直接按照0,1,2…的下标顺序存取？像之前分析的，我们在这个map里存取的是继承WeakReference的Entry类，它持有的key是弱引用，随时可能被回收，导致entry失效需要被清理或者覆盖，这种情况下如果按照顺序存取，越到后面的处理就会越复杂。</p>
+<h4 id="ThreadLocal的内存泄漏"><a href="#ThreadLocal的内存泄漏" class="headerlink" title="ThreadLocal的内存泄漏"></a>ThreadLocal的内存泄漏</h4><p>分析Entry类的时候提到过，Entry本身是一个只接受ThreadLocal对象的弱引用类，也就是Entry存储的key是弱引用，但是它所存储的value是强引用，弱引用不用担心，下次gc的时候就会被回收，那么持有强引用的value会不会引起内存泄漏？</p>
+<p>经过前面ThreadLocaMap中很多方法的分析不难发现，ThreadLocalMap本身对帮助垃圾回收做了很多处理，每次调用get/set方法的时候都会对无效元素进行一次清理，表内空间不足的时候更是会进行一次彻底的rehash，其中在调用到expungeStaleEntry方法时都会将key已经失效的entry的value和entry本身置null，释放这些强引用；而且ThreadLocalMap对象本身是Thread对象的普通属性成员，如果在一个线程中用到了ThreadLocal，在这个线程结束被回收后强引用断开，这个ThreadLocalMap以及map中的entry、value也都会被回收。有这两方面的防护，普通的使用ThreadLocal一般不会引起内存泄漏。</p>
+<p>但是有情况仍然会造成内存泄漏，那就是使用线程池。线程池的特性是重复使用已有线程，避免创建多余线程占用资源，这也就无法实现之前所说的线程结束后的回收，因为线程会永远存在在线程池中，所以对value的引用就一直得不到释放，导致内存泄漏。</p>
+<p>所以包括不使用线程池的情况在内，最稳妥的方法还是在使用完ThreadLocal后及时调用THreadLocal的remove方法。该方法会查找到以当前ThreadLocal对象为key的entry，及时清理这个元素的key、value和entry本身，消除内纯泄漏的隐患。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">消息处理机制</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">并发</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/02/11/ThreadLocal——线程的局部变量/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-熵权法" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/02/01/熵权法/">熵权法</a>
+    </h1>
+  
+
+        
+        <a href="/2018/02/01/熵权法/" class="archive-article-date">
+  	<time datetime="2018-02-01T01:52:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-02-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>在信息论中，熵是对不确定性的一种度量。信息量越大，不确定性就越小，熵也就越小；信息量越小，不确定性越大，熵也越大。</p>
+<p>熵权法是一种客观附权法，因为它仅仅依赖于数据本身的离散型(离散型数据类似于整数，比如人数等）。本文主要讲述用熵值来判断某个指标的离散程度，指标的离散程度越大，该指标对综合评价的影响（权重）越大。</p>
+<h2 id="使用步骤"><a href="#使用步骤" class="headerlink" title="使用步骤"></a>使用步骤</h2><p>1.对n个样本，m个指标,则$x_{ij}$为第i个样本的第j个指标的数值(i=1,…n;j=1,…,m);</p>
+<p>2.将评价矩阵归一化处理后得到$y_{ij}$,其计算公式如下：<img src="http://ww1.sinaimg.cn/large/006aoiFply1fo0ppq9b9lj304r01kq2q.jpg" alt=""></p>
+<p>ps：$x_j$代表该数据对应的列</p>
+<p>3.求各指标的信息熵</p>
+<p>据信息论中信息熵的定义，一组数据的信息熵为<img src="http://ww1.sinaimg.cn/large/006aoiFply1fo0pquf1c2j306a01ra9v.jpg" alt=""></p>
+<p><img src="http://ww1.sinaimg.cn/large/006aoiFply1fo0preenidj306q0170sj.jpg" alt=""></p>
+<p>4.确定各指标权重</p>
+<p>据信息熵的计算公式，计算出各个指标的信息熵E_1,E_2,..,E_k,通过信息熵计算各<img src="http://ww1.sinaimg.cn/large/006aoiFply1fo0prxgitaj303a01jt8h.jpg" alt="">(i=1,2,..,k).</p>
+<h2 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h2><p>  以美国的森林大火为例，样本为{加州森林，黄石森林，大烟山森林，亚利桑那森林}，评价指标为{森林可燃物，气候条件，火源，地形因素，林区管理}。</p>
+<p>1.数据标准化</p>
+<p>表1 四个森林五个评价指标得分表</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>森林可燃物</th>
+<th>气候条件</th>
+<th>火源</th>
+<th>地形因素</th>
+<th>林区管理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>加州森林</td>
+<td>100</td>
+<td>100</td>
+<td>89</td>
+<td>100</td>
+<td>80</td>
+</tr>
+<tr>
+<td>黄石森林</td>
+<td>100</td>
+<td>100</td>
+<td>87.9</td>
+<td>96.8</td>
+<td>87</td>
+</tr>
+<tr>
+<td>大烟山森林</td>
+<td>90</td>
+<td>80</td>
+<td>90</td>
+<td>80</td>
+<td>85</td>
+</tr>
+<tr>
+<td>亚利桑那森林</td>
+<td>85.7</td>
+<td>97</td>
+<td>80</td>
+<td>85</td>
+<td>80</td>
+</tr>
+</tbody>
+</table>
+<p>表2 四个森林五个评价指标得分标准化表</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align:center">森林可燃物</th>
+<th>气候条件</th>
+<th>火源</th>
+<th>地形因素</th>
+<th style="text-align:center">林区管理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>加州森林</td>
+<td style="text-align:center">1</td>
+<td>1</td>
+<td>0.9</td>
+<td>1</td>
+<td style="text-align:center">0</td>
+</tr>
+<tr>
+<td>黄石森林</td>
+<td style="text-align:center">1</td>
+<td>1</td>
+<td>0.79</td>
+<td>0.84</td>
+<td style="text-align:center">1</td>
+</tr>
+<tr>
+<td>大烟山森林</td>
+<td style="text-align:center">0.301</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td style="text-align:center">0.714</td>
+</tr>
+<tr>
+<td>亚利桑那森林</td>
+<td style="text-align:center">0</td>
+<td>0.85</td>
+<td>0</td>
+<td>0.25</td>
+<td style="text-align:center">0</td>
+</tr>
+</tbody>
+</table>
+<p>2.求各指标的信息熵</p>
+<p>根据信息熵的计算公式，可以得出5项指标各自的信息熵如下：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>$X_1$</th>
+<th>$X_2$</th>
+<th>$X_3$</th>
+<th>$X_4$</th>
+<th>$X_5$</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>信息熵</td>
+<td>0.26</td>
+<td>0.1</td>
+<td>0.203</td>
+<td>0.356</td>
+<td>0.173</td>
+</tr>
+</tbody>
+</table>
+<p>3.计算各指标的权重</p>
+<p>根据指标权重计算公式<img src="http://ww1.sinaimg.cn/large/006aoiFply1fo0prxgitaj303a01jt8h.jpg" alt="">(i=1,2…5),得到各个指标的权重表如下：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>$X_1$</th>
+<th>$X_2$</th>
+<th>$X_3$</th>
+<th>$X_4$</th>
+<th>$X_5$</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>权重</td>
+<td>0.189</td>
+<td>0.23</td>
+<td>0.204</td>
+<td>0.165</td>
+<td>0.212</td>
+</tr>
+</tbody>
+</table>
+<p>4.计算各样本的得分</p>
+<p>根据计算出的指标权重，以及得分表。设$z_l$为第$l$个样本的最终得分，则<img src="http://ww1.sinaimg.cn/large/006aoiFply1fo0pxfx1j5j303d01f3ya.jpg" alt="">,最后各森林的得分情况如下</p>
+<table>
+<thead>
+<tr>
+<th>森林</th>
+<th>加州</th>
+<th>黄石森林</th>
+<th>大烟山森林</th>
+<th>亚利桑那森林</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>得分</td>
+<td>93</td>
+<td>94</td>
+<td>84</td>
+<td>85</td>
+</tr>
+</tbody>
+</table>
+<p>ps:上述所有计算均由excel计算所得，最近发现excel在普通计算方面还是挺有作用的呢。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">数模</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/学习/" class="article-tag-list-link color3">学习</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/02/01/熵权法/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-MVC与MVP" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -918,192 +1460,6 @@
 
 
   
-    <article id="post-singleTon" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/09/14/singleTon/">单例模式的总结</a>
-    </h1>
-  
-
-        
-        <a href="/2017/09/14/singleTon/" class="archive-article-date">
-  	<time datetime="2017-09-14T15:17:38.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-09-14</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>单例模式作为最基础的一种设计模式，却是面试中最常被问及的知识点之一，这里作为复习，也为了加深自己的理解和记忆，再次将几种单例模式总结在这篇博文中。</p>
-        
-          <a class="article-more-a" href="/2017/09/14/singleTon/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">设计模式</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2017/09/14/singleTon/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-threadpool3" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/08/25/threadpool3/">线程池源码分析二</a>
-    </h1>
-  
-
-        
-        <a href="/2017/08/25/threadpool3/" class="archive-article-date">
-  	<time datetime="2017-08-25T08:39:10.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-25</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>经过了层层波折，总算是把addWorker大致走了下来，那么addWorker的返回值是返回到execute方法里的，为了方便阅读我们再把execute方法源码放在下面：</p>
-        
-          <a class="article-more-a" href="/2017/08/25/threadpool3/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">源码</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">并发</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/技术/" class="article-tag-list-link color3">技术</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2017/08/25/threadpool3/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
@@ -1217,11 +1573,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
+                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1233,18 +1593,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">框架</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
               </li>
              
@@ -1253,11 +1601,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">JVM</a>
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">JVM</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1265,11 +1617,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+                <a href="javascript:void(0)" class="js-tag color2">消息处理机制</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">并发</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">数模</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
               </li>
             
             <div class="clearfix"></div>
