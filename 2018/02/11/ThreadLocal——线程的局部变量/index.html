@@ -8,17 +8,17 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>ThreadLocal源码详细解析、魔数0x61c88647 | Rirsa&#39;s Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前言：写了好多天，算是从源码上相对详细的分析了整个ThreadLocal存取的过程。整体分析大致分为三层，从最外层的ThreadLocal的存取方法，到ThreadLocalMap对应的存取方法，到ThreadLocalMap更深一层的清理方法和rehash方法。后面有些地方还存有疑惑，暂且没有查阅到答案，在文中以（?具体问题?）标注，等后面有更深入的学习后填坑。  问题 ThreadLocal">
+  <meta name="description" content="前言：写了好多天，算是从源码上相对详细的分析了整个ThreadLocal存取的过程。整体分析大致分为三层，从最外层的ThreadLocal的存取方法，到ThreadLocalMap对应的存取方法，到ThreadLocalMap更深一层的清理方法和rehash方法。后面有些地方还存有疑惑，暂且没有查阅到答案，在文中以（?具体问题?）标注，等后面有更深入的学习后填坑。">
 <meta name="keywords" content="Java,源码,消息处理机制,并发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ThreadLocal源码详细解析、魔数0x61c88647">
 <meta property="og:url" content="http://yoursite.com/2018/02/11/ThreadLocal——线程的局部变量/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
-<meta property="og:description" content="前言：写了好多天，算是从源码上相对详细的分析了整个ThreadLocal存取的过程。整体分析大致分为三层，从最外层的ThreadLocal的存取方法，到ThreadLocalMap对应的存取方法，到ThreadLocalMap更深一层的清理方法和rehash方法。后面有些地方还存有疑惑，暂且没有查阅到答案，在文中以（?具体问题?）标注，等后面有更深入的学习后填坑。  问题 ThreadLocal">
-<meta property="og:updated_time" content="2018-02-11T10:18:19.713Z">
+<meta property="og:description" content="前言：写了好多天，算是从源码上相对详细的分析了整个ThreadLocal存取的过程。整体分析大致分为三层，从最外层的ThreadLocal的存取方法，到ThreadLocalMap对应的存取方法，到ThreadLocalMap更深一层的清理方法和rehash方法。后面有些地方还存有疑惑，暂且没有查阅到答案，在文中以（?具体问题?）标注，等后面有更深入的学习后填坑。">
+<meta property="og:updated_time" content="2018-02-11T10:20:02.065Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ThreadLocal源码详细解析、魔数0x61c88647">
-<meta name="twitter:description" content="前言：写了好多天，算是从源码上相对详细的分析了整个ThreadLocal存取的过程。整体分析大致分为三层，从最外层的ThreadLocal的存取方法，到ThreadLocalMap对应的存取方法，到ThreadLocalMap更深一层的清理方法和rehash方法。后面有些地方还存有疑惑，暂且没有查阅到答案，在文中以（?具体问题?）标注，等后面有更深入的学习后填坑。  问题 ThreadLocal">
+<meta name="twitter:description" content="前言：写了好多天，算是从源码上相对详细的分析了整个ThreadLocal存取的过程。整体分析大致分为三层，从最外层的ThreadLocal的存取方法，到ThreadLocalMap对应的存取方法，到ThreadLocalMap更深一层的清理方法和rehash方法。后面有些地方还存有疑惑，暂且没有查阅到答案，在文中以（?具体问题?）标注，等后面有更深入的学习后填坑。">
   
     <link rel="alternative" href="/atom.xml" title="Rirsa&#39;s Home" type="application/atom+xml">
   
@@ -187,6 +187,7 @@
         <blockquote>
 <p>前言：写了好多天，算是从源码上相对详细的分析了整个ThreadLocal存取的过程。整体分析大致分为三层，从最外层的ThreadLocal的存取方法，到ThreadLocalMap对应的存取方法，到ThreadLocalMap更深一层的清理方法和rehash方法。后面有些地方还存有疑惑，暂且没有查阅到答案，在文中以（?具体问题?）标注，等后面有更深入的学习后填坑。</p>
 </blockquote>
+<a id="more"></a>
 <h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
 <li>ThreadLocal的作用和意义是什么？</li>
 <li>ThreadLocal是如何实现这样的作用的？</li>
@@ -661,6 +662,22 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">源码</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">Linux</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">基础</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">Picasso</a>
               </li>
              
@@ -673,35 +690,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Linux</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">基础</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">数据结构</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">杂记</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">EventBus</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">源码</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">JVM</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Python</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -713,11 +706,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">数模</a>
+                <a href="javascript:void(0)" class="js-tag color4">JVM</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">Python</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">数模</a>
               </li>
             
             <div class="clearfix"></div>
