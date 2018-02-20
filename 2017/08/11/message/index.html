@@ -15,7 +15,7 @@
 <meta property="og:url" content="http://yoursite.com/2017/08/11/message/index.html">
 <meta property="og:site_name" content="Rirsa&#39;s Home">
 <meta property="og:description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。">
-<meta property="og:updated_time" content="2018-01-30T11:33:48.784Z">
+<meta property="og:updated_time" content="2018-02-20T07:40:54.499Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="消息处理机制">
 <meta name="twitter:description" content="优秀的事物果然是常读常新，时隔很久再看消息处理机制，发现了很多之前没有注意到的东西，特此整理。由于是二次整理，这里不再写Handler的一般使用，直接从源码解读开始。">
@@ -217,7 +217,7 @@
 <p>此时再看Looper类的myLooper方法，自然是返回prepare方法中初始化完成并暂存在sThreadLocal中的Looper对象。不过Looper的工作还没完成，Looper的准备工作要做两步，一个是prepare，一个是loop。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">loop</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">final</span> Looper me = myLooper();</div><div class="line">        <span class="keyword">final</span> MessageQueue queue = me.mQueue;</div><div class="line">        <span class="keyword">for</span> (;;) &#123;</div><div class="line">            Message msg = queue.next(); <span class="comment">// might block</span></div><div class="line">            <span class="keyword">if</span> (msg == <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="comment">// No message indicates that the message queue is quitting.</span></div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                msg.target.dispatchMessage(msg);</div><div class="line">            &#125; <span class="keyword">finally</span> &#123;</div><div class="line">          </div><div class="line">            &#125;</div><div class="line">            </div><div class="line">            msg.recycleUnchecked();</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
 <p>事实上loop方法做了很多log和线程追踪，但是这里只将实现主要功能的代码放在上面。我们看到，方法中先通过myLooper方法获取到前面prepare方法中初始化好的Looper对象，然后拿到Looper的构造函数中初始化好的消息队列对象mQueue，然后进入到了一个无限循环。</p>
-<p>循环中不断从消息中取Message对象，如果取到消息为null，则通过return实现阻塞，如果有消息出现在队列中，则被取出，通过取出消息的target调用dispatchMessage方法，并将消息传入该方法。</p>
+<p>循环中不断从消息中取Message对象，如果取到消息为null，<del>则通过return实现阻塞</del>（大意了，这里应该是通过队列对象的next方法实现阻塞），如果有消息出现在队列中，则被取出，通过取出消息的target调用dispatchMessage方法，并将消息传入该方法。</p>
 <p>所谓target，其实就是Message类中的一个Handler对象，这里就是拿到队列中取出的消息的Handler属性对象，并调用它的dispatchMesssage方法对这个消息进行分发处理，该方法留到后面看Handler的源码详细分析。</p>
 <p>将事件分发处理之后，loop方法最后调用了从队列中取出的Message对象的recycleUnchecked方法：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">recycleUnchecked</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="comment">// Mark the message as in use while it remains in the recycled object pool.</span></div><div class="line">        <span class="comment">// Clear out all other details.</span></div><div class="line">        flags = FLAG_IN_USE;</div><div class="line">        what = <span class="number">0</span>;</div><div class="line">        arg1 = <span class="number">0</span>;</div><div class="line">        arg2 = <span class="number">0</span>;</div><div class="line">        obj = <span class="keyword">null</span>;</div><div class="line">        replyTo = <span class="keyword">null</span>;</div><div class="line">        sendingUid = -<span class="number">1</span>;</div><div class="line">        when = <span class="number">0</span>;</div><div class="line">        target = <span class="keyword">null</span>;</div><div class="line">        callback = <span class="keyword">null</span>;</div><div class="line">        data = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">        <span class="keyword">synchronized</span> (sPoolSync) &#123;</div><div class="line">            <span class="keyword">if</span> (sPoolSize &lt; MAX_POOL_SIZE) &#123;</div><div class="line">                next = sPool;</div><div class="line">                sPool = <span class="keyword">this</span>;</div><div class="line">                sPoolSize++;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
@@ -618,14 +618,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">Java</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">Linux</a>
               </li>
              
@@ -634,7 +626,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">框架</a>
+                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">读书笔记</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -643,6 +639,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">图片加载框架</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">框架</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -662,11 +662,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">JVM</a>
+                <a href="javascript:void(0)" class="js-tag color2">Python</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Python</a>
+                <a href="javascript:void(0)" class="js-tag color4">JVM</a>
               </li>
              
               <li class="article-tag-list-item">
